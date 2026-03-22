@@ -26,55 +26,16 @@
           </p>
         </div>
 
-        <div class="fortune-wrapper" aria-hidden="true">
-          <div class="fortune-cloud fortune-cloud-left"></div>
-          <div class="fortune-cloud fortune-cloud-right"></div>
-          <div class="fortune-coins">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div class="fortune-wrapper">
+          <div class="fortune-photo-frame">
+            <img class="fortune-image" src="./assets/caishen.png" alt="财神举着大头菜和元宝" />
           </div>
-          <div class="fortune-god">
-            <div class="fortune-hat">
-              <span class="hat-gem"></span>
-            </div>
-            <div class="fortune-face">
-              <span class="eye eye-left"></span>
-              <span class="eye eye-right"></span>
-              <span class="blush blush-left"></span>
-              <span class="blush blush-right"></span>
-              <span class="mustache"></span>
-              <span class="smile"></span>
-            </div>
-            <div class="fortune-body">
-              <span class="fortune-symbol">财</span>
-            </div>
-            <div class="fortune-arm arm-left">
-              <div class="turnip-bundle">
-                <span class="turnip-leaf leaf-one"></span>
-                <span class="turnip-leaf leaf-two"></span>
-                <span class="turnip-leaf leaf-three"></span>
-                <span class="turnip-bulb"></span>
-              </div>
-            </div>
-            <div class="fortune-arm arm-right">
-              <div class="fortune-board">
-                <span class="fortune-board-label">BTC</span>
-                <strong id="fortuneBtcPrice">--</strong>
-              </div>
-            </div>
+          <div class="fortune-board">
+            <span class="fortune-board-label">BTC</span>
+            <strong id="fortuneBtcPrice">--</strong>
           </div>
         </div>
 
-        <div class="hero-actions">
-          <button id="sampleButton" class="primary-button" type="button">
-            填入示例周数据
-          </button>
-          <button id="resetButton" class="ghost-button" type="button">
-            清空本周记录
-          </button>
-          <p id="statusText" class="status-text">本地保存已开启，刷新页面也会保留。</p>
-        </div>
       </section>
 
       <section class="crypto-reminder" aria-label="BTC ETH 价格提醒">
@@ -98,6 +59,22 @@
               <span id="ethChange" class="crypto-badge crypto-flat">--</span>
             </div>
             <strong id="ethPrice">--</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="news-strip" aria-label="世界新闻头条">
+        <div class="news-strip-header">
+          <div>
+            <p class="eyebrow">世界新闻头条</p>
+            <h2>今天也看看外面的世界</h2>
+          </div>
+          <p id="newsStatus" class="panel-note">正在获取头条新闻...</p>
+        </div>
+        <div id="newsList" class="news-list">
+          <article class="news-item">
+            <p class="news-source">Loading</p>
+            <p class="news-title">新闻加载中...</p>
           </article>
         </div>
       </section>

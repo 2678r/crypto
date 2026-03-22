@@ -1,6 +1,8 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
+const NEWS_API_URL =
+  "https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en";
 
 const slots = [
   { id: "mon_am", label: "周一 AM", hint: "上午价格" },
@@ -47,6 +49,31 @@ const statusText = document.querySelector("#statusText");
 const sampleButton = document.querySelector("#sampleButton");
 const resetButton = document.querySelector("#resetButton");
 const cryptoStatus = document.querySelector("#cryptoStatus");
+const newsStatus = document.querySelector("#newsStatus");
+const newsList = document.querySelector("#newsList");
+
+const fallbackHeadlines = [
+  {
+    title: "Global markets watch inflation, rates, and fresh risk signals.",
+    source: "World",
+    link: "https://news.google.com/",
+  },
+  {
+    title: "Major technology and AI developments continue shaping global headlines.",
+    source: "Tech",
+    link: "https://news.google.com/",
+  },
+  {
+    title: "Energy, shipping, and regional tensions remain key stories worldwide.",
+    source: "Economy",
+    link: "https://news.google.com/",
+  },
+  {
+    title: "各地市场与政策变化，仍然是全球新闻关注重点。",
+    source: "中文",
+    link: "https://news.google.com/",
+  },
+];
 
 let state = loadState();
 
@@ -261,6 +288,39 @@ function render() {
   renderTable(buyPrice);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function getSourceLabel(item) {
+  if (item.source) return item.source;
+  if (item.author) return item.author;
+  return "Headline";
+}
+
+function renderNews(items) {
+  newsList.innerHTML = items
+    .slice(0, 4)
+    .map((item) => {
+      const title = escapeHtml(item.title ?? "Untitled headline");
+      const source = escapeHtml(getSourceLabel(item));
+      const link = item.link || "https://news.google.com/";
+
+      return `
+        <a class="news-item" href="${link}" target="_blank" rel="noreferrer">
+          <p class="news-source">${source}</p>
+          <p class="news-title">${title}</p>
+        </a>
+      `;
+    })
+    .join("");
+}
+
 function formatUsd(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "--";
   return new Intl.NumberFormat("en-US", {
@@ -350,10 +410,48 @@ async function loadCryptoPrices() {
   }
 }
 
+async function loadNewsHeadlines() {
+  if (!newsStatus || !newsList) return;
+
+  newsStatus.textContent = "正在获取头条新闻...";
+
+  try {
+    const response = await fetch(NEWS_API_URL, {
+      headers: { accept: "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    if (!items.length) {
+      throw new Error("No items");
+    }
+
+    renderNews(
+      items.map((item) => ({
+        title: item.title,
+        source: item.author || item.source || "Google News",
+        link: item.link,
+      })),
+    );
+    newsStatus.textContent = "显示 4 条世界头条，支持中英文标题。";
+  } catch (error) {
+    renderNews(fallbackHeadlines);
+    newsStatus.textContent = "实时头条暂时不可用，先显示备用新闻提示。";
+    console.error(error);
+  }
+}
+
 function persistAndRender(message) {
   saveState();
   render();
-  statusText.textContent = message;
+  if (statusText) {
+    statusText.textContent = message;
+  }
 }
 
 buyPriceInput.addEventListener("input", (event) => {
@@ -361,19 +459,25 @@ buyPriceInput.addEventListener("input", (event) => {
   persistAndRender("已更新周日买入价。");
 });
 
-sampleButton.addEventListener("click", () => {
-  state = structuredClone(sampleWeek);
-  createInputs();
-  persistAndRender("已填入一组示例数据，方便你先看页面效果。");
-});
+if (sampleButton) {
+  sampleButton.addEventListener("click", () => {
+    state = structuredClone(sampleWeek);
+    createInputs();
+    persistAndRender("已填入一组示例数据，方便你先看页面效果。");
+  });
+}
 
-resetButton.addEventListener("click", () => {
-  state = structuredClone(defaultState);
-  createInputs();
-  persistAndRender("本周记录已清空。");
-});
+if (resetButton) {
+  resetButton.addEventListener("click", () => {
+    state = structuredClone(defaultState);
+    createInputs();
+    persistAndRender("本周记录已清空。");
+  });
+}
 
 createInputs();
 render();
 loadCryptoPrices();
+loadNewsHeadlines();
 window.setInterval(loadCryptoPrices, 60_000);
+window.setInterval(loadNewsHeadlines, 10 * 60_000);
