@@ -1,312 +1,285 @@
-const apiUrl =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=12&page=1&sparkline=false&price_change_percentage=24h";
+const STORAGE_KEY = "turnip-tracker-week";
 
-const fallbackCoins = [
-  {
-    market_cap_rank: 1,
-    name: "Bitcoin",
-    symbol: "btc",
-    image: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-    current_price: 84250,
-    price_change_percentage_24h: 2.84,
-    market_cap: 1660000000000,
-    total_volume: 32400000000,
-  },
-  {
-    market_cap_rank: 2,
-    name: "Ethereum",
-    symbol: "eth",
-    image: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
-    current_price: 4580,
-    price_change_percentage_24h: 1.42,
-    market_cap: 551000000000,
-    total_volume: 21000000000,
-  },
-  {
-    market_cap_rank: 3,
-    name: "Solana",
-    symbol: "sol",
-    image: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
-    current_price: 188.14,
-    price_change_percentage_24h: 5.96,
-    market_cap: 81200000000,
-    total_volume: 4300000000,
-  },
-  {
-    market_cap_rank: 4,
-    name: "BNB",
-    symbol: "bnb",
-    image: "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png",
-    current_price: 612.91,
-    price_change_percentage_24h: -0.82,
-    market_cap: 89300000000,
-    total_volume: 1900000000,
-  },
-  {
-    market_cap_rank: 5,
-    name: "XRP",
-    symbol: "xrp",
-    image: "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png",
-    current_price: 1.27,
-    price_change_percentage_24h: 3.21,
-    market_cap: 70100000000,
-    total_volume: 2700000000,
-  },
-  {
-    market_cap_rank: 6,
-    name: "Dogecoin",
-    symbol: "doge",
-    image: "https://assets.coingecko.com/coins/images/5/large/dogecoin.png",
-    current_price: 0.21,
-    price_change_percentage_24h: -2.11,
-    market_cap: 29900000000,
-    total_volume: 1200000000,
-  },
-  {
-    market_cap_rank: 7,
-    name: "Toncoin",
-    symbol: "ton",
-    image: "https://assets.coingecko.com/coins/images/17980/large/ton_symbol.png",
-    current_price: 6.31,
-    price_change_percentage_24h: 4.63,
-    market_cap: 21900000000,
-    total_volume: 360000000,
-  },
-  {
-    market_cap_rank: 8,
-    name: "Cardano",
-    symbol: "ada",
-    image: "https://assets.coingecko.com/coins/images/975/large/cardano.png",
-    current_price: 0.82,
-    price_change_percentage_24h: -1.56,
-    market_cap: 29100000000,
-    total_volume: 640000000,
-  },
-  {
-    market_cap_rank: 9,
-    name: "Avalanche",
-    symbol: "avax",
-    image: "https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png",
-    current_price: 41.88,
-    price_change_percentage_24h: 6.2,
-    market_cap: 17200000000,
-    total_volume: 760000000,
-  },
-  {
-    market_cap_rank: 10,
-    name: "Shiba Inu",
-    symbol: "shib",
-    image: "https://assets.coingecko.com/coins/images/11939/large/shiba.png",
-    current_price: 0.0000312,
-    price_change_percentage_24h: -3.42,
-    market_cap: 18300000000,
-    total_volume: 510000000,
-  },
-  {
-    market_cap_rank: 11,
-    name: "Chainlink",
-    symbol: "link",
-    image: "https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png",
-    current_price: 18.46,
-    price_change_percentage_24h: 0.24,
-    market_cap: 10900000000,
-    total_volume: 430000000,
-  },
-  {
-    market_cap_rank: 12,
-    name: "Polkadot",
-    symbol: "dot",
-    image: "https://assets.coingecko.com/coins/images/12171/large/polkadot.png",
-    current_price: 8.14,
-    price_change_percentage_24h: -1.14,
-    market_cap: 11700000000,
-    total_volume: 290000000,
-  },
+const slots = [
+  { id: "mon_am", label: "周一 AM", hint: "上午价格" },
+  { id: "mon_pm", label: "周一 PM", hint: "下午价格" },
+  { id: "tue_am", label: "周二 AM", hint: "上午价格" },
+  { id: "tue_pm", label: "周二 PM", hint: "下午价格" },
+  { id: "wed_am", label: "周三 AM", hint: "上午价格" },
+  { id: "wed_pm", label: "周三 PM", hint: "下午价格" },
+  { id: "thu_am", label: "周四 AM", hint: "上午价格" },
+  { id: "thu_pm", label: "周四 PM", hint: "下午价格" },
+  { id: "fri_am", label: "周五 AM", hint: "上午价格" },
+  { id: "fri_pm", label: "周五 PM", hint: "下午价格" },
+  { id: "sat_am", label: "周六 AM", hint: "上午价格" },
+  { id: "sat_pm", label: "周六 PM", hint: "下午价格" },
 ];
 
+const sampleWeek = {
+  buyPrice: 96,
+  prices: {
+    mon_am: 88,
+    mon_pm: 83,
+    tue_am: 79,
+    tue_pm: 74,
+    wed_am: 128,
+    wed_pm: 176,
+    thu_am: 212,
+    thu_pm: 164,
+    fri_am: 119,
+    fri_pm: "",
+    sat_am: "",
+    sat_pm: "",
+  },
+};
+
+const defaultState = {
+  buyPrice: "",
+  prices: Object.fromEntries(slots.map((slot) => [slot.id, ""])),
+};
+
+const buyPriceInput = document.querySelector("#buyPriceInput");
+const priceGrid = document.querySelector("#priceGrid");
 const tableBody = document.querySelector("#tableBody");
-const refreshButton = document.querySelector("#refreshButton");
 const statusText = document.querySelector("#statusText");
+const sampleButton = document.querySelector("#sampleButton");
+const resetButton = document.querySelector("#resetButton");
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: value >= 1_000_000_000 ? "compact" : "standard",
-    maximumFractionDigits: value < 1 ? 6 : 2,
-  }).format(value);
+let state = loadState();
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return structuredClone(defaultState);
+
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      buyPrice: parsed.buyPrice ?? "",
+      prices: { ...structuredClone(defaultState).prices, ...(parsed.prices ?? {}) },
+    };
+  } catch {
+    return structuredClone(defaultState);
+  }
 }
 
-function formatChange(value) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "--";
-  const prefix = value > 0 ? "+" : "";
-  return `${prefix}${value.toFixed(2)}%`;
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function getChangeClass(value) {
-  if (value > 0.2) return "change-positive";
-  if (value < -0.2) return "change-negative";
-  return "change-neutral";
+function toNumber(value) {
+  if (value === "" || value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function getMomentumLabel(change) {
-  if (change >= 4) {
-    return { label: "Bullish", className: "momentum-bullish" };
+function createInputs() {
+  priceGrid.innerHTML = slots
+    .map(
+      (slot) => `
+        <label class="slot-card" for="${slot.id}">
+          <span>${slot.label}</span>
+          <small>${slot.hint}</small>
+          <input
+            id="${slot.id}"
+            type="number"
+            min="0"
+            max="999"
+            placeholder="未记录"
+            value="${state.prices[slot.id]}"
+          />
+        </label>
+      `,
+    )
+    .join("");
+
+  slots.forEach((slot) => {
+    const input = document.querySelector(`#${slot.id}`);
+    input.addEventListener("input", (event) => {
+      state.prices[slot.id] = event.target.value;
+      persistAndRender("已更新本周价格记录。");
+    });
+  });
+}
+
+function getRecordedEntries() {
+  return slots
+    .map((slot, index) => ({
+      ...slot,
+      index,
+      value: toNumber(state.prices[slot.id]),
+    }))
+    .filter((slot) => slot.value !== null);
+}
+
+function summarizePattern(buyPrice, entries) {
+  if (!buyPrice || entries.length === 0) {
+    return {
+      pattern: "等待录入",
+      detail: "先输入买入价和几个时段价格，系统会开始缩小范围。",
+      peakRange: "--",
+      peakWindow: "还无法判断峰值时段。",
+      action: "继续观察",
+      actionDetail: "数据越完整，建议会越明确。",
+      advice: "先补充价格",
+      adviceCopy: "至少录入买入价和 2 到 3 个时段，判断会更稳。",
+    };
   }
 
-  if (change <= -4) {
-    return { label: "Bearish", className: "momentum-bearish" };
+  const values = entries.map((entry) => entry.value);
+  const highest = Math.max(...values);
+  const latest = entries[entries.length - 1];
+  const aboveBuyCount = values.filter((value) => value > buyPrice).length;
+  const bigSpike = values.some((value) => value >= buyPrice * 1.8);
+  const risingSteps = values.slice(1).filter((value, index) => value > values[index]).length;
+  const fallingSteps = values.slice(1).filter((value, index) => value < values[index]).length;
+  const earlyValues = entries.slice(0, 4).map((entry) => entry.value);
+  const earlyDrop = earlyValues.length >= 2 && earlyValues.every((value) => value <= buyPrice);
+
+  if (bigSpike) {
+    return {
+      pattern: "暴涨型候选",
+      detail: "已经出现远高于买入价的大峰值，这周更像典型的大波峰走势。",
+      peakRange: `${Math.round(highest)} - ${Math.round(highest * 1.12)} 铃钱`,
+      peakWindow: latest.index < 7 ? "高点可能已出现，后段要警惕快速回落。" : "高点大概率已经兑现，建议优先落袋为安。",
+      action: highest >= buyPrice * 2 ? "高位可卖" : "进入高警戒",
+      actionDetail: highest >= buyPrice * 2 ? "已经是非常漂亮的卖点，别等回落。" : "如果下个时段继续冲高，就可以准备出手。",
+      advice: "看到 180+ 可重点考虑卖出",
+      adviceCopy: "这类走势高点来得快，犹豫太久常常会错过最佳窗口。",
+    };
   }
 
-  return { label: "Balanced", className: "momentum-neutral" };
-}
-
-function formatTime(date) {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(date);
-}
-
-function renderSpotlight(containerId, coin) {
-  const container = document.querySelector(containerId);
-  if (!coin) {
-    container.innerHTML = "<p>No market data available.</p>";
-    return;
+  if (earlyDrop && risingSteps >= 2 && aboveBuyCount >= 1) {
+    return {
+      pattern: "波动型候选",
+      detail: "前半周先压价，后面开始抬升，像中后段冲高的波动走势。",
+      peakRange: `${Math.round(buyPrice * 1.45)} - ${Math.round(buyPrice * 1.9)} 铃钱`,
+      peakWindow: latest.index <= 6 ? "重点盯周三 PM 到周五 AM，容易出现好价格。" : "如果目前还在抬升，接下来 1 到 2 个时段值得守一下。",
+      action: aboveBuyCount >= 2 ? "可分批卖" : "继续盯高点",
+      actionDetail: aboveBuyCount >= 2 ? "已经进入盈利区，可以分批卖出降低回落风险。" : "还在酝酿阶段，先别太早出清。",
+      advice: "重点关注中后段抬升",
+      adviceCopy: "这种走势最怕错过真正峰值，建议每个 AM/PM 都及时补录。",
+    };
   }
 
-  container.innerHTML = `
-    <div class="coin-header">
-      <img src="${coin.image}" alt="${coin.name} logo" />
-      <div>
-        <p class="coin-name">${coin.name}</p>
-        <p class="coin-symbol">${coin.symbol}</p>
-      </div>
-    </div>
-    <div class="spotlight-stat">
-      <span>Price</span>
-      <strong>${formatCurrency(coin.current_price)}</strong>
-    </div>
-    <div class="spotlight-stat">
-      <span>24H Change</span>
-      <strong class="${getChangeClass(coin.price_change_percentage_24h)}">${formatChange(
-        coin.price_change_percentage_24h,
-      )}</strong>
-    </div>
-    <div class="spotlight-stat">
-      <span>24H Volume</span>
-      <strong>${formatCurrency(coin.total_volume)}</strong>
-    </div>
-  `;
-}
-
-function renderMetrics(coins) {
-  const changes = coins.map((coin) => coin.price_change_percentage_24h || 0);
-  const average = changes.reduce((sum, value) => sum + value, 0) / changes.length;
-  const positiveCount = changes.filter((value) => value > 0).length;
-  const negativeCount = changes.filter((value) => value < 0).length;
-
-  let mood = "Sideways";
-  let moodDetail = "Buyers and sellers look fairly balanced right now.";
-
-  if (average > 1.5 && positiveCount >= negativeCount * 1.5) {
-    mood = "Risk-On";
-    moodDetail = "Broad participation suggests buyers are driving the tape.";
-  } else if (average < -1.5 && negativeCount >= positiveCount * 1.5) {
-    mood = "Risk-Off";
-    moodDetail = "Weak breadth suggests the market is trading defensively.";
+  if (fallingSteps >= Math.max(3, entries.length - 2) && highest <= buyPrice * 1.1) {
+    return {
+      pattern: "递减型候选",
+      detail: "整体持续走低，暂时看不到强反弹，像一周慢慢烂掉的走势。",
+      peakRange: `${Math.round(buyPrice * 0.65)} - ${Math.round(buyPrice * 1.05)} 铃钱`,
+      peakWindow: "后续通常不会很惊艳，若出现接近买入价的反弹就值得重视。",
+      action: latest.value >= buyPrice ? "保本可卖" : "尽量减少损失",
+      actionDetail: latest.value >= buyPrice ? "能回到买入价附近已经不错，可以考虑直接卖。" : "如果你有别的岛可以串门，最好尽快找更好价格。",
+      advice: "别把希望押得太满",
+      adviceCopy: "递减周最重要的是止损和保本，不要等不存在的大反转。",
+    };
   }
 
-  document.querySelector("#marketMood").textContent = mood;
-  document.querySelector("#marketMoodDetail").textContent = moodDetail;
-  document.querySelector("#averageChange").textContent = formatChange(average);
-  document.querySelector("#averageChange").className = getChangeClass(average);
-  document.querySelector("#breadthRatio").textContent = `${positiveCount}:${negativeCount}`;
-  document.querySelector("#lastUpdated").textContent = formatTime(new Date());
+  return {
+    pattern: "小波型候选",
+    detail: "目前像温和起伏的一周，可能会有一次中等强度上涨，但未必特别夸张。",
+    peakRange: `${Math.round(buyPrice * 1.15)} - ${Math.round(buyPrice * 1.45)} 铃钱`,
+    peakWindow: latest.index <= 8 ? "高点更可能落在周四到周五之间。" : "剩余时段不多，有利润就可以更主动一点。",
+    action: highest > buyPrice * 1.25 ? "有赚可卖" : "观察下一跳",
+    actionDetail: highest > buyPrice * 1.25 ? "这类走势峰值通常不算夸张，达到心理价位就可以卖。" : "还没出现明显卖点，再观察一两个时段。",
+    advice: "别等超大奇迹价",
+    adviceCopy: "小波型更适合见好就收，不一定会给到 200+ 的梦幻数字。",
+  };
 }
 
-function renderTable(coins) {
-  tableBody.innerHTML = coins
-    .map((coin) => {
-      const momentum = getMomentumLabel(coin.price_change_percentage_24h || 0);
+function formatBell(value) {
+  return value === null ? "-- 铃钱" : `${value} 铃钱`;
+}
+
+function getDeltaClass(delta) {
+  if (delta > 0) return "price-up";
+  if (delta < 0) return "price-down";
+  return "price-flat";
+}
+
+function getStatusPill(price, buyPrice) {
+  if (price === null) {
+    return { label: "未记录", className: "pill-caution" };
+  }
+
+  if (price >= buyPrice * 1.5) {
+    return { label: "好价格", className: "pill-good" };
+  }
+
+  if (price >= buyPrice) {
+    return { label: "已回本", className: "pill-caution" };
+  }
+
+  return { label: "低于成本", className: "pill-bad" };
+}
+
+function renderTable(buyPrice) {
+  tableBody.innerHTML = slots
+    .map((slot) => {
+      const value = toNumber(state.prices[slot.id]);
+      const delta = buyPrice && value !== null ? value - buyPrice : null;
+      const deltaText =
+        delta === null ? "--" : `${delta > 0 ? "+" : ""}${delta} 铃钱`;
+      const pill = getStatusPill(value, buyPrice || Number.MAX_SAFE_INTEGER);
 
       return `
         <tr>
-          <td class="rank">${coin.market_cap_rank ?? "--"}</td>
-          <td>
-            <div class="coin-cell">
-              <img src="${coin.image}" alt="${coin.name} logo" />
-              <div>
-                <div>${coin.name}</div>
-                <div class="coin-symbol">${coin.symbol}</div>
-              </div>
-            </div>
-          </td>
-          <td class="price">${formatCurrency(coin.current_price)}</td>
-          <td class="${getChangeClass(coin.price_change_percentage_24h || 0)}">
-            ${formatChange(coin.price_change_percentage_24h || 0)}
-          </td>
-          <td class="mono">${formatCurrency(coin.market_cap)}</td>
-          <td class="mono">${formatCurrency(coin.total_volume)}</td>
-          <td>
-            <span class="momentum-pill ${momentum.className}">
-              ${momentum.label}
-            </span>
-          </td>
+          <td>${slot.label}</td>
+          <td>${value === null ? "--" : `${value} 铃钱`}</td>
+          <td class="${delta === null ? "" : getDeltaClass(delta)}">${deltaText}</td>
+          <td><span class="status-pill ${pill.className}">${pill.label}</span></td>
         </tr>
       `;
     })
     .join("");
 }
 
-async function loadDashboard() {
-  refreshButton.disabled = true;
-  statusText.textContent = "Updating live market snapshot...";
+function render() {
+  const buyPrice = toNumber(state.buyPrice);
+  const entries = getRecordedEntries();
+  const summary = summarizePattern(buyPrice, entries);
+  const highest = entries.length ? Math.max(...entries.map((entry) => entry.value)) : null;
 
-  try {
-    const response = await fetch(apiUrl, {
-      headers: { accept: "application/json" },
-    });
+  buyPriceInput.value = state.buyPrice;
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+  document.querySelector("#patternName").textContent = summary.pattern;
+  document.querySelector("#patternDetail").textContent = summary.detail;
+  document.querySelector("#buyPriceCard").textContent = formatBell(buyPrice);
+  document.querySelector("#weekHighCard").textContent = formatBell(highest);
+  document.querySelector("#actionCard").textContent = summary.action;
+  document.querySelector("#actionDetail").textContent = summary.actionDetail;
 
-    const coins = await response.json();
-    updateDashboard(coins, false);
-  } catch (error) {
-    updateDashboard(fallbackCoins, true);
-    statusText.textContent =
-      "Live API unavailable, showing fallback demo market data.";
-    console.error(error);
-  } finally {
-    refreshButton.disabled = false;
-  }
+  document.querySelector("#bestPattern").textContent = summary.pattern;
+  document.querySelector("#bestPatternCopy").textContent = summary.detail;
+  document.querySelector("#peakRange").textContent = summary.peakRange;
+  document.querySelector("#peakWindow").textContent = summary.peakWindow;
+  document.querySelector("#nextAdvice").textContent = summary.advice;
+  document.querySelector("#nextAdviceCopy").textContent = summary.adviceCopy;
+
+  renderTable(buyPrice);
 }
 
-function updateDashboard(coins, isFallback) {
-  const rankedCoins = [...coins].sort(
-    (left, right) => (left.market_cap_rank ?? 999) - (right.market_cap_rank ?? 999),
-  );
-  const leader = [...rankedCoins].sort(
-    (left, right) =>
-      (right.price_change_percentage_24h || 0) - (left.price_change_percentage_24h || 0),
-  )[0];
-  const laggard = [...rankedCoins].sort(
-    (left, right) =>
-      (left.price_change_percentage_24h || 0) - (right.price_change_percentage_24h || 0),
-  )[0];
-
-  renderMetrics(rankedCoins);
-  renderSpotlight("#leaderCard", leader);
-  renderSpotlight("#laggardCard", laggard);
-  renderTable(rankedCoins);
-
-  if (!isFallback) {
-    statusText.textContent = "Live data loaded from CoinGecko.";
-  }
+function persistAndRender(message) {
+  saveState();
+  render();
+  statusText.textContent = message;
 }
 
-refreshButton.addEventListener("click", loadDashboard);
-loadDashboard();
+buyPriceInput.addEventListener("input", (event) => {
+  state.buyPrice = event.target.value;
+  persistAndRender("已更新周日买入价。");
+});
+
+sampleButton.addEventListener("click", () => {
+  state = structuredClone(sampleWeek);
+  createInputs();
+  persistAndRender("已填入一组示例数据，方便你先看页面效果。");
+});
+
+resetButton.addEventListener("click", () => {
+  state = structuredClone(defaultState);
+  createInputs();
+  persistAndRender("本周记录已清空。");
+});
+
+createInputs();
+render();
