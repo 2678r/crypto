@@ -115,6 +115,61 @@ h1 {
   line-height: 1.65;
 }
 
+.today-strip {
+  display: inline-grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(249, 252, 241, 0.94);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 26px rgba(118, 137, 77, 0.08);
+}
+
+.today-date,
+.today-lunar {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.today-time {
+  color: #6b5117;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.birthday-strip {
+  display: inline-grid;
+  gap: 5px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 248, 225, 0.96);
+  border: 1px solid rgba(216, 157, 43, 0.22);
+  box-shadow: 0 12px 26px rgba(216, 157, 43, 0.08);
+}
+
+.birthday-label {
+  color: #9a6a12;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.birthday-name {
+  color: #6b5117;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+
+.birthday-meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 .fortune-wrapper {
   position: relative;
   width: 320px;
@@ -323,6 +378,98 @@ h1 {
   color: var(--text);
   font-size: 0.95rem;
   line-height: 1.55;
+}
+
+.places-strip {
+  margin-bottom: 16px;
+  padding: 20px 22px;
+  border-radius: 24px;
+  background: rgba(248, 252, 244, 0.94);
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 36px rgba(118, 137, 77, 0.08);
+}
+
+.places-strip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.places-strip-header h2 {
+  font-size: 1.5rem;
+  color: #6f5a1b;
+}
+
+.places-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.place-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 252, 241, 0.96);
+  border: 1px solid var(--line);
+}
+
+.place-name {
+  margin-bottom: 8px;
+  color: #7aa545;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.place-card h3 {
+  font-size: 1.7rem;
+  margin-bottom: 8px;
+  color: #6b5117;
+}
+
+.place-weather {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.place-forecast {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.forecast-day {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(249, 252, 241, 0.9);
+  border: 1px solid rgba(108, 122, 73, 0.1);
+}
+
+.forecast-day-name {
+  color: #5f7331;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.forecast-day-weather {
+  flex: 1 1 auto;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.forecast-day-temp {
+  color: #486d2d;
+  font-size: 0.92rem;
+  font-weight: 800;
 }
 
 .crypto-reminder {
@@ -694,8 +841,20 @@ tbody tr:hover {
     align-self: center;
   }
 
+  .today-strip {
+    width: fit-content;
+  }
+
+  .birthday-strip {
+    width: fit-content;
+  }
+
   .news-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .places-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -732,7 +891,28 @@ tbody tr:hover {
     align-self: center;
   }
 
+  .today-strip {
+    width: 100%;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .birthday-strip {
+    width: 100%;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .today-time {
+    font-size: 1.2rem;
+  }
+
   .news-strip {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .places-strip {
     padding: 18px;
     border-radius: 20px;
   }
@@ -743,7 +923,17 @@ tbody tr:hover {
     gap: 8px;
   }
 
+  .places-strip-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
   .news-strip-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .places-strip-header h2 {
     font-size: 1.3rem;
   }
 
@@ -751,9 +941,18 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .places-grid {
+    grid-template-columns: 1fr;
+  }
+
   .news-item {
     border-radius: 16px;
     padding: 13px 14px;
+  }
+
+  .place-card {
+    border-radius: 16px;
+    padding: 14px;
   }
 
   .fortune-board {

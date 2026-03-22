@@ -24,6 +24,16 @@
           <p class="lead">
             记一下这周菜价，轻松看看什么时候卖更开心一点。
           </p>
+          <div class="today-strip" aria-label="当天时间和农历">
+            <p id="todayDate" class="today-date">--</p>
+            <p id="todayTime" class="today-time">--:--:--</p>
+            <p id="todayLunar" class="today-lunar">农历加载中...</p>
+          </div>
+          <div class="birthday-strip" aria-label="最近农历生日提醒">
+            <p class="birthday-label">最近农历生日</p>
+            <p id="birthdayName" class="birthday-name">计算中...</p>
+            <p id="birthdayMeta" class="birthday-meta">正在查找最近的生日提醒...</p>
+          </div>
         </div>
 
         <div class="fortune-wrapper">
@@ -75,6 +85,42 @@
           <article class="news-item">
             <p class="news-source">Loading</p>
             <p class="news-title">新闻加载中...</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="places-strip" aria-label="家庭城市天气和时间">
+        <div class="places-strip-header">
+          <div>
+            <p class="eyebrow">家庭天气和时间</p>
+            <h2>伊斯坦布尔 · 上海 · 盐城</h2>
+          </div>
+          <p id="placesStatus" class="panel-note">正在获取天气与本地时间...</p>
+        </div>
+
+        <div class="places-grid">
+          <article class="place-card">
+            <p class="place-name">Istanbul</p>
+            <h3 id="istanbulTime">--:--</h3>
+            <div id="istanbulForecast" class="place-forecast">
+              <p class="place-weather">天气加载中...</p>
+            </div>
+          </article>
+
+          <article class="place-card">
+            <p class="place-name">Shanghai</p>
+            <h3 id="shanghaiTime">--:--</h3>
+            <div id="shanghaiForecast" class="place-forecast">
+              <p class="place-weather">天气加载中...</p>
+            </div>
+          </article>
+
+          <article class="place-card">
+            <p class="place-name">Yancheng</p>
+            <h3 id="yanchengTime">--:--</h3>
+            <div id="yanchengForecast" class="place-forecast">
+              <p class="place-weather">天气加载中...</p>
+            </div>
           </article>
         </div>
       </section>

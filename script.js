@@ -3,6 +3,29 @@ const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
 const NEWS_API_URL =
   "https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en";
+const WEATHER_LOCATIONS = [
+  {
+    id: "istanbul",
+    name: "Istanbul",
+    timezone: "Europe/Istanbul",
+    latitude: 41.0082,
+    longitude: 28.9784,
+  },
+  {
+    id: "shanghai",
+    name: "Shanghai",
+    timezone: "Asia/Shanghai",
+    latitude: 31.2304,
+    longitude: 121.4737,
+  },
+  {
+    id: "yancheng",
+    name: "Yancheng",
+    timezone: "Asia/Shanghai",
+    latitude: 33.3495,
+    longitude: 120.1573,
+  },
+];
 
 const slots = [
   { id: "mon_am", label: "周一 AM", hint: "上午价格" },
@@ -51,6 +74,24 @@ const resetButton = document.querySelector("#resetButton");
 const cryptoStatus = document.querySelector("#cryptoStatus");
 const newsStatus = document.querySelector("#newsStatus");
 const newsList = document.querySelector("#newsList");
+const placesStatus = document.querySelector("#placesStatus");
+const todayDate = document.querySelector("#todayDate");
+const todayTime = document.querySelector("#todayTime");
+const todayLunar = document.querySelector("#todayLunar");
+const birthdayName = document.querySelector("#birthdayName");
+const birthdayMeta = document.querySelector("#birthdayMeta");
+
+const familyBirthdays = [
+  { name: "毛毛", birth: "2014-01-05" },
+  { name: "鬼鬼", birth: "2018-08-03" },
+  { name: "奶奶", birth: "1953-12-10" },
+  { name: "爷爷", birth: "1954-06-06" },
+  { name: "爸爸", birth: "1981-06-07" },
+  { name: "姐姐", birth: "2008-07-08" },
+  { name: "帆帆", birth: "2010-01-10" },
+  { name: "沈园长", birth: "1987-03-04" },
+  { name: "何院长", birth: "1982-10-25" },
+];
 
 const fallbackHeadlines = [
   {
@@ -74,6 +115,24 @@ const fallbackHeadlines = [
     link: "https://news.google.com/",
   },
 ];
+
+const fallbackPlaces = {
+  istanbul: [
+    { day: "今天", weather: "晴到多云", temp: "18C / 11C" },
+    { day: "明天", weather: "局部多云", temp: "17C / 10C" },
+    { day: "后天", weather: "小雨", temp: "15C / 9C" },
+  ],
+  shanghai: [
+    { day: "今天", weather: "多云", temp: "22C / 16C" },
+    { day: "明天", weather: "阵雨", temp: "21C / 17C" },
+    { day: "后天", weather: "阴天", temp: "20C / 15C" },
+  ],
+  yancheng: [
+    { day: "今天", weather: "小雨转阴", temp: "20C / 14C" },
+    { day: "明天", weather: "多云", temp: "21C / 13C" },
+    { day: "后天", weather: "晴朗", temp: "23C / 14C" },
+  ],
+};
 
 let state = loadState();
 
@@ -321,6 +380,201 @@ function renderNews(items) {
     .join("");
 }
 
+function formatCityTime(timezone) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: timezone,
+  }).format(new Date());
+}
+
+function formatTodayLunar(date) {
+  try {
+    const lunarParts = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).formatToParts(date);
+
+    const year = lunarParts.find((part) => part.type === "relatedYear")?.value || "";
+    const month = lunarParts.find((part) => part.type === "month")?.value || "";
+    const day = lunarParts.find((part) => part.type === "day")?.value || "";
+
+    return `农历 ${year}年 ${month}${day}`;
+  } catch {
+    return "农历信息暂不可用";
+  }
+}
+
+function getLunarMonthDay(date) {
+  const parts = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+    month: "long",
+    day: "numeric",
+  }).formatToParts(date);
+
+  return {
+    month: parts.find((part) => part.type === "month")?.value || "",
+    day: parts.find((part) => part.type === "day")?.value || "",
+  };
+}
+
+function parseBirthDate(value) {
+  const digits = value.replaceAll("-", "");
+  if (digits.length !== 8) return null;
+
+  const year = Number(digits.slice(0, 4));
+  const month = Number(digits.slice(4, 6));
+  const day = Number(digits.slice(6, 8));
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function diffDays(from, to) {
+  const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const end = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.round((end - start) / 86400000);
+}
+
+function findNextLunarBirthday(targetMonth, targetDay, fromDate) {
+  const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+
+  for (let offset = 0; offset <= 400; offset += 1) {
+    const probe = new Date(start);
+    probe.setDate(start.getDate() + offset);
+    const lunar = getLunarMonthDay(probe);
+
+    if (lunar.month === targetMonth && lunar.day === targetDay) {
+      return probe;
+    }
+  }
+
+  return null;
+}
+
+function updateBirthdayReminder() {
+  if (!birthdayName || !birthdayMeta) return;
+
+  const today = new Date();
+  const candidates = familyBirthdays
+    .map((person) => {
+      const birthDate = parseBirthDate(person.birth);
+      if (!birthDate) return null;
+
+      const lunarBirth = getLunarMonthDay(birthDate);
+      const nextBirthday = findNextLunarBirthday(lunarBirth.month, lunarBirth.day, today);
+      if (!nextBirthday) return null;
+
+      return {
+        ...person,
+        lunarLabel: `${lunarBirth.month}${lunarBirth.day}`,
+        nextBirthday,
+        daysLeft: diffDays(today, nextBirthday),
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.daysLeft - right.daysLeft);
+
+  const upcoming = candidates[0];
+
+  if (!upcoming) {
+    birthdayName.textContent = "暂时算不出来";
+    birthdayMeta.textContent = "生日提醒加载失败。";
+    return;
+  }
+
+  birthdayName.textContent = `${upcoming.name} 快过生日啦`;
+
+  if (upcoming.daysLeft === 0) {
+    birthdayMeta.textContent = `今天是农历${upcoming.lunarLabel}，正好生日。`;
+    return;
+  }
+
+  birthdayMeta.textContent =
+    `农历${upcoming.lunarLabel}，还有 ${upcoming.daysLeft} 天。`;
+}
+
+function updateTodayInfo() {
+  const now = new Date();
+
+  if (todayDate) {
+    todayDate.textContent = new Intl.DateTimeFormat("zh-CN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(now);
+  }
+
+  if (todayTime) {
+    todayTime.textContent = new Intl.DateTimeFormat("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(now);
+  }
+
+  if (todayLunar) {
+    todayLunar.textContent = formatTodayLunar(now);
+  }
+}
+
+function weatherCodeToText(code) {
+  const map = {
+    0: "晴朗",
+    1: "大致晴",
+    2: "局部多云",
+    3: "阴天",
+    45: "有雾",
+    48: "雾凇",
+    51: "小毛雨",
+    53: "毛雨",
+    55: "强毛雨",
+    61: "小雨",
+    63: "中雨",
+    65: "大雨",
+    71: "小雪",
+    73: "中雪",
+    75: "大雪",
+    80: "阵雨",
+    81: "较强阵雨",
+    82: "强阵雨",
+    95: "雷暴",
+  };
+
+  return map[code] || "天气更新中";
+}
+
+function updatePlaceTime() {
+  WEATHER_LOCATIONS.forEach((location) => {
+    const timeNode = document.querySelector(`#${location.id}Time`);
+    if (timeNode) {
+      timeNode.textContent = formatCityTime(location.timezone);
+    }
+  });
+}
+
+function renderPlaceForecast(id, days) {
+  const forecastNode = document.querySelector(`#${id}Forecast`);
+  if (!forecastNode) return;
+
+  forecastNode.innerHTML = days
+    .slice(0, 3)
+    .map(
+      (day) => `
+        <div class="forecast-day">
+          <span class="forecast-day-name">${escapeHtml(day.day)}</span>
+          <span class="forecast-day-weather">${escapeHtml(day.weather)}</span>
+          <span class="forecast-day-temp">${escapeHtml(day.temp)}</span>
+        </div>
+      `,
+    )
+    .join("");
+}
+
 function formatUsd(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "--";
   return new Intl.NumberFormat("en-US", {
@@ -446,6 +700,50 @@ async function loadNewsHeadlines() {
   }
 }
 
+async function loadPlacesWeather() {
+  if (!placesStatus) return;
+
+  placesStatus.textContent = "正在获取天气与本地时间...";
+  updatePlaceTime();
+
+  try {
+    await Promise.all(
+      WEATHER_LOCATIONS.map(async (location) => {
+        const url =
+          `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}` +
+          `&longitude=${location.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=3&timezone=auto`;
+        const response = await fetch(url, {
+          headers: { accept: "application/json" },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const daily = data.daily;
+        const labels = ["今天", "明天", "后天"];
+        const forecast = labels.map((label, index) => ({
+          day: label,
+          weather: weatherCodeToText(daily?.weather_code?.[index]),
+          temp: `${Math.round(daily?.temperature_2m_max?.[index] ?? 0)}C / ${Math.round(daily?.temperature_2m_min?.[index] ?? 0)}C`,
+        }));
+
+        renderPlaceForecast(location.id, forecast);
+      }),
+    );
+
+    placesStatus.textContent = "三地时间实时更新，天气显示最近 3 天预报。";
+  } catch (error) {
+    WEATHER_LOCATIONS.forEach((location) => {
+      const fallback = fallbackPlaces[location.id];
+      renderPlaceForecast(location.id, fallback);
+    });
+    placesStatus.textContent = "实时天气暂时不可用，先显示备用信息。";
+    console.error(error);
+  }
+}
+
 function persistAndRender(message) {
   saveState();
   render();
@@ -477,7 +775,15 @@ if (resetButton) {
 
 createInputs();
 render();
+updateTodayInfo();
+updateBirthdayReminder();
+updatePlaceTime();
 loadCryptoPrices();
 loadNewsHeadlines();
+loadPlacesWeather();
+window.setInterval(updateTodayInfo, 1000);
+window.setInterval(updateBirthdayReminder, 60 * 60_000);
+window.setInterval(updatePlaceTime, 30_000);
 window.setInterval(loadCryptoPrices, 60_000);
 window.setInterval(loadNewsHeadlines, 10 * 60_000);
+window.setInterval(loadPlacesWeather, 10 * 60_000);
