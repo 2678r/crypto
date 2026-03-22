@@ -99,6 +99,7 @@ const birthdayHeroBanner = document.querySelector("#birthdayHeroBanner");
 const birthdayHeroText = document.querySelector("#birthdayHeroText");
 const heroCopy = document.querySelector(".hero-copy");
 const blessingWall = document.querySelector("#blessingWall");
+const familyExtra = document.querySelector("#familyExtra");
 const turnipExtra = document.querySelector("#turnipExtra");
 
 const familyBirthdays = [
@@ -801,6 +802,7 @@ function updateBirthdayHero(upcoming) {
   if (upcoming?.daysLeft === 0) {
     birthdayHeroBanner.hidden = false;
     if (blessingWall) blessingWall.hidden = false;
+    if (familyExtra) familyExtra.open = false;
     if (turnipExtra) turnipExtra.open = false;
     document.body.classList.add("birthday-page");
     birthdayHeroText.textContent = `今天给 ${upcoming.name} 过生日啦`;
@@ -811,6 +813,7 @@ function updateBirthdayHero(upcoming) {
 
   birthdayHeroBanner.hidden = true;
   if (blessingWall) blessingWall.hidden = true;
+  if (familyExtra) familyExtra.open = true;
   if (turnipExtra) turnipExtra.open = true;
   document.body.classList.remove("birthday-page");
   mainHeadline.innerHTML = "祝 YIYA YIFAN 发大财<br />大头菜大赢家";
