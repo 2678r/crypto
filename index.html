@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crypto Top Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-glow background-glow-left"></div>
+    <div class="background-glow background-glow-right"></div>
+
+    <main class="app-shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Market Pulse</p>
+          <h1>Crypto Top Dashboard</h1>
+          <p class="hero-copy">
+            Track leading coins, scan short-term momentum, and keep an eye on
+            broad market strength in one compact workspace.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button id="refreshButton" class="refresh-button" type="button">
+            Refresh Data
+          </button>
+          <p id="statusText" class="status-text">Loading market data...</p>
+        </div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Market overview">
+        <article class="metric-card">
+          <p class="metric-label">Market Mood</p>
+          <h2 id="marketMood">Scanning</h2>
+          <p id="marketMoodDetail" class="metric-detail">
+            Building a quick read on the board.
+          </p>
+        </article>
+
+        <article class="metric-card">
+          <p class="metric-label">Avg 24H Move</p>
+          <h2 id="averageChange">--</h2>
+          <p class="metric-detail">Across all tracked top coins.</p>
+        </article>
+
+        <article class="metric-card">
+          <p class="metric-label">Leaders vs Laggards</p>
+          <h2 id="breadthRatio">--</h2>
+          <p class="metric-detail">Coins up versus coins down today.</p>
+        </article>
+
+        <article class="metric-card">
+          <p class="metric-label">Last Update</p>
+          <h2 id="lastUpdated">--</h2>
+          <p class="metric-detail">Local browser time.</p>
+        </article>
+      </section>
+
+      <section class="spotlight-grid">
+        <article class="spotlight-card">
+          <div class="section-heading">
+            <p class="eyebrow">Top Performer</p>
+            <h2>Daily Leader</h2>
+          </div>
+          <div id="leaderCard" class="spotlight-content"></div>
+        </article>
+
+        <article class="spotlight-card">
+          <div class="section-heading">
+            <p class="eyebrow">Weakest Performer</p>
+            <h2>Risk Watch</h2>
+          </div>
+          <div id="laggardCard" class="spotlight-content"></div>
+        </article>
+      </section>
+
+      <section class="board">
+        <div class="board-header">
+          <div>
+            <p class="eyebrow">Leaderboard</p>
+            <h2>Top Coins</h2>
+          </div>
+          <p class="board-note">
+            Sorted by market cap with a simple momentum signal based on 24h move.
+          </p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Coin</th>
+                <th>Price</th>
+                <th>24H</th>
+                <th>Market Cap</th>
+                <th>Volume</th>
+                <th>Momentum</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="7" class="loading-row">Loading dashboard...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
