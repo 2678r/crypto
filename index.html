@@ -37,6 +37,31 @@
         </div>
       </section>
 
+      <section class="crypto-reminder" aria-label="BTC ETH 价格提醒">
+        <div class="crypto-reminder-copy">
+          <p class="eyebrow">顺手提醒</p>
+          <p id="cryptoStatus" class="crypto-status">正在获取 BTC / ETH 价格...</p>
+        </div>
+
+        <div class="crypto-pill-wrap">
+          <article class="crypto-pill">
+            <div class="crypto-pill-top">
+              <span class="crypto-symbol">BTC</span>
+              <span id="btcChange" class="crypto-badge crypto-flat">--</span>
+            </div>
+            <strong id="btcPrice">--</strong>
+          </article>
+
+          <article class="crypto-pill">
+            <div class="crypto-pill-top">
+              <span class="crypto-symbol">ETH</span>
+              <span id="ethChange" class="crypto-badge crypto-flat">--</span>
+            </div>
+            <strong id="ethPrice">--</strong>
+          </article>
+        </div>
+      </section>
+
       <section class="metrics-grid" aria-label="本周概览">
         <article class="metric-card">
           <p class="metric-label">当前判断</p>
@@ -152,6 +177,7 @@
           </table>
         </div>
       </section>
+
     </main>
 
     <script src="./script.js"></script>

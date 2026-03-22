@@ -1,19 +1,19 @@
 :root {
   color-scheme: light;
-  --bg: #f8f2d9;
-  --bg-deep: #f0e7c3;
-  --panel: rgba(255, 251, 236, 0.84);
-  --panel-strong: rgba(255, 248, 224, 0.96);
-  --line: rgba(133, 111, 66, 0.14);
-  --text: #3e3220;
-  --muted: #7c6b4b;
+  --bg: #ffffff;
+  --bg-deep: #f6faee;
+  --panel: rgba(255, 252, 241, 0.86);
+  --panel-strong: rgba(253, 249, 230, 0.96);
+  --line: rgba(108, 122, 73, 0.14);
+  --text: #3d4526;
+  --muted: #6f7851;
   --green: #3e9f69;
   --red: #d76b54;
   --gold: #d89d2b;
-  --leaf: #7ab35d;
-  --peach: #f4b989;
-  --cream: #fff7df;
-  --shadow: 0 24px 70px rgba(120, 96, 48, 0.14);
+  --leaf: #75b55a;
+  --peach: #f4d09a;
+  --cream: #fff8df;
+  --shadow: 0 24px 70px rgba(118, 137, 77, 0.14);
 }
 
 * {
@@ -26,9 +26,9 @@ body {
   font-family: "Nunito", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at 10% 10%, rgba(255, 220, 146, 0.45), transparent 20%),
-    radial-gradient(circle at 82% 16%, rgba(173, 218, 151, 0.38), transparent 20%),
-    linear-gradient(180deg, #fff7dc 0%, #f9f1d6 45%, #efe2ba 100%);
+    radial-gradient(circle at 10% 10%, rgba(255, 228, 162, 0.18), transparent 18%),
+    radial-gradient(circle at 85% 14%, rgba(160, 214, 152, 0.16), transparent 22%),
+    linear-gradient(180deg, #ffffff 0%, #fcfef8 42%, #f6faee 100%);
 }
 
 .sky {
@@ -44,13 +44,13 @@ body {
 .sky-left {
   top: -4rem;
   left: -5rem;
-  background: rgba(255, 206, 118, 0.8);
+  background: rgba(255, 220, 162, 0.45);
 }
 
 .sky-right {
   right: -5rem;
   bottom: -5rem;
-  background: rgba(131, 196, 105, 0.78);
+  background: rgba(165, 216, 152, 0.42);
 }
 
 .app-shell {
@@ -171,6 +171,59 @@ h1 {
   display: grid;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+.crypto-reminder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 22px;
+  background: rgba(250, 253, 242, 0.92);
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 34px rgba(118, 137, 77, 0.09);
+}
+
+.crypto-reminder-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.crypto-status {
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.crypto-pill-wrap {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.crypto-pill {
+  min-width: 152px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 252, 241, 0.95);
+  border: 1px solid var(--line);
+}
+
+.crypto-pill-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.crypto-pill strong {
+  display: block;
+  font-size: 1.05rem;
+  color: #5e4e1e;
 }
 
 .metrics-grid {
@@ -340,6 +393,38 @@ input {
   margin-top: 4px;
 }
 
+.crypto-symbol {
+  font-family: "ZCOOL KuaiLe", cursive;
+  font-size: 1rem;
+  color: #6f8d2e;
+}
+
+.crypto-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.crypto-up {
+  color: #165236;
+  background: rgba(122, 179, 93, 0.22);
+}
+
+.crypto-down {
+  color: #8f4335;
+  background: rgba(215, 107, 84, 0.18);
+}
+
+.crypto-flat {
+  color: #8b5f0c;
+  background: rgba(216, 157, 43, 0.18);
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -491,6 +576,26 @@ tbody tr:hover {
     border: 1px solid var(--line);
     backdrop-filter: blur(14px);
     box-shadow: 0 16px 40px rgba(120, 96, 48, 0.12);
+  }
+
+  .crypto-reminder {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .crypto-pill-wrap {
+    justify-content: stretch;
+  }
+
+  .crypto-pill {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .crypto-pill strong {
+    font-size: 1rem;
   }
 
   .status-text {

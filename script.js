@@ -1,4 +1,6 @@
 const STORAGE_KEY = "turnip-tracker-week";
+const CRYPTO_API_URL =
+  "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
 
 const slots = [
   { id: "mon_am", label: "周一 AM", hint: "上午价格" },
@@ -44,6 +46,7 @@ const tableBody = document.querySelector("#tableBody");
 const statusText = document.querySelector("#statusText");
 const sampleButton = document.querySelector("#sampleButton");
 const resetButton = document.querySelector("#resetButton");
+const cryptoStatus = document.querySelector("#cryptoStatus");
 
 let state = loadState();
 
@@ -258,6 +261,76 @@ function render() {
   renderTable(buyPrice);
 }
 
+function formatUsd(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value >= 1000 ? 0 : 2,
+  }).format(value);
+}
+
+function formatPercent(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+  const prefix = value > 0 ? "+" : "";
+  return `${prefix}${value.toFixed(2)}%`;
+}
+
+function renderCryptoCard(priceId, changeId, price, change) {
+  const priceNode = document.querySelector(priceId);
+  const changeNode = document.querySelector(changeId);
+
+  priceNode.textContent = formatUsd(price);
+  changeNode.textContent = formatPercent(change);
+  changeNode.className = "crypto-badge";
+
+  if (change > 0.15) {
+    changeNode.classList.add("crypto-up");
+  } else if (change < -0.15) {
+    changeNode.classList.add("crypto-down");
+  } else {
+    changeNode.classList.add("crypto-flat");
+  }
+}
+
+async function loadCryptoPrices() {
+  cryptoStatus.textContent = "正在获取实时价格...";
+
+  try {
+    const response = await fetch(CRYPTO_API_URL, {
+      headers: { accept: "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    renderCryptoCard(
+      "#btcPrice",
+      "#btcChange",
+      data.bitcoin?.usd,
+      data.bitcoin?.usd_24h_change,
+    );
+    renderCryptoCard(
+      "#ethPrice",
+      "#ethChange",
+      data.ethereum?.usd,
+      data.ethereum?.usd_24h_change,
+    );
+    cryptoStatus.textContent = "实时价格来自 CoinGecko，会在每分钟刷新一次。";
+  } catch (error) {
+    document.querySelector("#btcPrice").textContent = "--";
+    document.querySelector("#ethPrice").textContent = "--";
+    document.querySelector("#btcChange").textContent = "暂不可用";
+    document.querySelector("#ethChange").textContent = "暂不可用";
+    document.querySelector("#btcChange").className = "crypto-badge crypto-flat";
+    document.querySelector("#ethChange").className = "crypto-badge crypto-flat";
+    cryptoStatus.textContent = "暂时拿不到实时价格，稍后再试。";
+    console.error(error);
+  }
+}
+
 function persistAndRender(message) {
   saveState();
   render();
@@ -283,3 +356,5 @@ resetButton.addEventListener("click", () => {
 
 createInputs();
 render();
+loadCryptoPrices();
+window.setInterval(loadCryptoPrices, 60_000);
