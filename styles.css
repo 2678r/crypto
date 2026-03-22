@@ -879,6 +879,92 @@ body.birthday-page .home-extra-summary {
   margin-bottom: 18px;
 }
 
+.message-board {
+  margin-bottom: 16px;
+}
+
+.message-form {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.message-field {
+  height: 100%;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 108px;
+  border: 0;
+  outline: none;
+  border-radius: 14px;
+  background: #fffdf3;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.message-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.message-status {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.message-list {
+  display: grid;
+  gap: 12px;
+}
+
+.message-card {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 24px rgba(118, 137, 77, 0.06);
+}
+
+.message-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.message-author {
+  color: #6c5114;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.message-time {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.message-copy {
+  color: var(--text);
+  font-size: 0.98rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .field-card,
 .mini-tip {
   border-radius: 22px;
@@ -1099,7 +1185,8 @@ tbody tr:hover {
 @media (max-width: 960px) {
   .hero,
   .panel-heading,
-  .buy-row {
+  .buy-row,
+  .message-form {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
@@ -1241,6 +1328,22 @@ tbody tr:hover {
   .home-extra-summary {
     padding: 12px 14px;
     border-radius: 16px;
+  }
+
+  .message-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .message-card {
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .message-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 
   .news-strip-header {

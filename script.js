@@ -1,4 +1,5 @@
 const STORAGE_KEY = "turnip-tracker-week";
+const MESSAGE_BOARD_KEY = "family-message-board-v1";
 const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
 const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v3";
 const BIRTHDAY_PREVIEW_MODE = false;
@@ -101,6 +102,11 @@ const heroCopy = document.querySelector(".hero-copy");
 const blessingWall = document.querySelector("#blessingWall");
 const familyExtra = document.querySelector("#familyExtra");
 const turnipExtra = document.querySelector("#turnipExtra");
+const messageForm = document.querySelector("#messageForm");
+const messageNameInput = document.querySelector("#messageName");
+const messageTextInput = document.querySelector("#messageText");
+const messageStatus = document.querySelector("#messageStatus");
+const messageList = document.querySelector("#messageList");
 
 const familyBirthdays = [
   { name: "毛毛", birth: "2014-01-05" },
@@ -317,6 +323,16 @@ function loadState() {
   }
 }
 
+function loadMessageEntries() {
+  const raw = loadJsonCache(MESSAGE_BOARD_KEY);
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((entry) => entry && entry.name && entry.text && entry.createdAt);
+}
+
+function saveMessageEntries(entries) {
+  saveJsonCache(MESSAGE_BOARD_KEY, entries.slice(-24));
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -520,6 +536,69 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function formatMessageTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function renderMessageBoard() {
+  if (!messageList) return;
+
+  const entries = loadMessageEntries();
+
+  if (!entries.length) {
+    messageList.innerHTML = '<p class="loading-row">还没有留言，来写第一条吧。</p>';
+    return;
+  }
+
+  messageList.innerHTML = entries
+    .slice()
+    .reverse()
+    .map((entry) => `
+      <article class="message-card">
+        <div class="message-card-top">
+          <p class="message-author">${escapeHtml(entry.name)}</p>
+          <time class="message-time">${escapeHtml(formatMessageTime(entry.createdAt))}</time>
+        </div>
+        <p class="message-copy">${escapeHtml(entry.text)}</p>
+      </article>
+    `)
+    .join("");
+}
+
+function handleMessageSubmit(event) {
+  event.preventDefault();
+  if (!messageNameInput || !messageTextInput || !messageStatus) return;
+
+  const name = messageNameInput.value.trim().slice(0, 20);
+  const text = messageTextInput.value.trim().slice(0, 160);
+
+  if (!name || !text) {
+    messageStatus.textContent = "名字和留言都写一点，发布后才会显示出来。";
+    return;
+  }
+
+  const entries = loadMessageEntries();
+  entries.push({
+    name,
+    text,
+    createdAt: new Date().toISOString(),
+  });
+  saveMessageEntries(entries);
+  renderMessageBoard();
+
+  messageNameInput.value = name;
+  messageTextInput.value = "";
+  messageStatus.textContent = "发布成功，这条留言已经放到留言板上了。";
 }
 
 function getSourceLabel(item) {
@@ -1132,9 +1211,14 @@ if (resetButton) {
   });
 }
 
+if (messageForm) {
+  messageForm.addEventListener("submit", handleMessageSubmit);
+}
+
 createInputs();
 render();
 renderBlessingWall();
+renderMessageBoard();
 updateTodayInfo();
 updateBirthdayReminder();
 updateDailyQuote();
