@@ -160,7 +160,6 @@ h1 {
 
 .birthday-strip {
   display: inline-grid;
-  gap: 5px;
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 18px;

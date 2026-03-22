@@ -1,6 +1,6 @@
 const STORAGE_KEY = "turnip-tracker-week";
-const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v1";
-const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v1";
+const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
+const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v2";
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
 const NEWS_API_URL =
@@ -89,7 +89,7 @@ const familyBirthdays = [
   { name: "毛毛", birth: "2014-01-05" },
   { name: "鬼鬼", birth: "2018-08-03" },
   { name: "奶奶", birth: "1953-12-10" },
-  { name: "爷爷", birth: "1954-06-06" },
+  { name: "爷爷", birth: "1954-06-06", lunarOverride: { month: "五月", day: "16" } },
   { name: "爸爸", birth: "1981-06-07" },
   { name: "姐姐", birth: "2008-07-08" },
   { name: "帆帆", birth: "2010-01-10" },
@@ -496,6 +496,10 @@ function getLunarBirthdays() {
   let changed = false;
 
   const result = familyBirthdays.map((person) => {
+    if (person.lunarOverride?.month && person.lunarOverride?.day) {
+      return { ...person, lunarBirth: person.lunarOverride };
+    }
+
     const cached = cacheMap[person.birth];
     if (cached?.month && cached?.day) {
       return { ...person, lunarBirth: cached };
@@ -578,11 +582,10 @@ function updateBirthdayReminder() {
 
   if (upcoming.daysLeft === 0) {
     birthdayMeta.textContent = `今天是农历${upcoming.lunarLabel}，正好生日。`;
-    return;
+  } else {
+    birthdayMeta.textContent =
+      `农历${upcoming.lunarLabel}，还有 ${upcoming.daysLeft} 天。`;
   }
-
-  birthdayMeta.textContent =
-    `农历${upcoming.lunarLabel}，还有 ${upcoming.daysLeft} 天。`;
 }
 
 function updateDailyQuote() {
