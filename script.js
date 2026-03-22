@@ -111,7 +111,18 @@ const messageNameInput = document.querySelector("#messageName");
 const messageTextInput = document.querySelector("#messageText");
 const messageStatus = document.querySelector("#messageStatus");
 const messageList = document.querySelector("#messageList");
+const foodStatus = document.querySelector("#foodStatus");
+const foodGrid = document.querySelector("#foodGrid");
 let messageBoardMode = "shared";
+
+const foodBenchmarks = [
+  { name: "牛肉", benchmark: "全球基准", unit: "$/kg", latest: 8.12, previous: 7.97, period: "2026年2月" },
+  { name: "鸡肉", benchmark: "全球基准", unit: "$/kg", latest: 1.79, previous: 1.75, period: "2026年2月" },
+  { name: "大米", benchmark: "泰国 5% 碎米", unit: "$/mt", latest: 409.0, previous: 408.0, period: "2026年2月" },
+  { name: "小麦", benchmark: "美国 HRW", unit: "$/mt", latest: 257.6, previous: 249.9, period: "2026年2月" },
+  { name: "食用油", benchmark: "棕榈油", unit: "$/mt", latest: 1042, previous: 1005, period: "2026年2月" },
+  { name: "糖", benchmark: "世界糖价", unit: "$/kg", latest: 0.31, previous: 0.32, period: "2026年2月" },
+];
 
 const familyBirthdays = [
   { name: "毛毛", birth: "2014-01-05" },
@@ -1114,6 +1125,58 @@ function formatUsd(value) {
   }).format(value);
 }
 
+function formatFoodValue(value, unit) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+
+  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2;
+  return `${new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value)} ${unit.replace("$", "").trim()}`;
+}
+
+function formatFoodDelta(latest, previous) {
+  if (typeof latest !== "number" || typeof previous !== "number" || previous === 0) {
+    return { label: "--", className: "food-change food-flat" };
+  }
+
+  const change = ((latest - previous) / previous) * 100;
+  const prefix = change > 0 ? "+" : "";
+  const className =
+    change > 0.05 ? "food-change food-up" : change < -0.05 ? "food-change food-down" : "food-change food-flat";
+
+  return {
+    label: `${prefix}${change.toFixed(1)}%`,
+    className,
+  };
+}
+
+function renderFoodBoard() {
+  if (!foodGrid || !foodStatus) return;
+
+  foodStatus.textContent = "来源：世界银行 Pink Sheet，统一按美元基准价显示。";
+  foodGrid.innerHTML = foodBenchmarks
+    .map((item) => {
+      const delta = formatFoodDelta(item.latest, item.previous);
+      return `
+        <article class="food-card">
+          <div class="food-card-top">
+            <div>
+              <p class="food-name">${escapeHtml(item.name)}</p>
+              <p class="food-benchmark">${escapeHtml(item.benchmark)}</p>
+            </div>
+            <span class="${delta.className}">${delta.label}</span>
+          </div>
+          <h3>${escapeHtml(formatFoodValue(item.latest, item.unit))}</h3>
+          <p class="food-period">${escapeHtml(item.period)} 月均价</p>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function formatPercent(value) {
   if (typeof value !== "number" || Number.isNaN(value)) return "--";
   const prefix = value > 0 ? "+" : "";
@@ -1318,6 +1381,7 @@ if (messageForm) {
 createInputs();
 render();
 renderBlessingWall();
+renderFoodBoard();
 renderMessageBoard();
 syncMessageBoard();
 window.setInterval(() => {

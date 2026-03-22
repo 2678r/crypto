@@ -883,6 +883,98 @@ body.birthday-page .home-extra-summary {
   margin-bottom: 16px;
 }
 
+.food-board {
+  margin-bottom: 16px;
+}
+
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.food-card {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 24px rgba(118, 137, 77, 0.06);
+}
+
+.food-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.food-name {
+  color: #6c5114;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.food-benchmark {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.food-card h3 {
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+.food-period {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.food-change {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.food-up {
+  color: #a53e1f;
+  background: rgba(243, 194, 154, 0.4);
+}
+
+.food-down {
+  color: #2f7a51;
+  background: rgba(178, 219, 185, 0.42);
+}
+
+.food-flat {
+  color: #6b6b6b;
+  background: rgba(218, 218, 218, 0.34);
+}
+
+.food-footnote {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.food-footnote a {
+  color: #6a8f2f;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.food-footnote a:hover {
+  text-decoration: underline;
+}
+
 .message-form {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -1209,6 +1301,10 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .food-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .fortune-wrapper {
     align-self: center;
   }
@@ -1386,6 +1482,15 @@ tbody tr:hover {
 
   .blessing-list {
     grid-template-columns: 1fr;
+  }
+
+  .food-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .food-card {
+    border-radius: 16px;
+    padding: 14px;
   }
 
   .news-item {
