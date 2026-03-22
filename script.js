@@ -1,6 +1,6 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
-const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v2";
+const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v3";
 const BIRTHDAY_PREVIEW_MODE = false;
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
@@ -637,18 +637,37 @@ function parseBirthDate(value) {
   return date;
 }
 
+function getChinaDateParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value || "0"),
+    month: Number(parts.find((part) => part.type === "month")?.value || "1"),
+    day: Number(parts.find((part) => part.type === "day")?.value || "1"),
+  };
+}
+
 function diffDays(from, to) {
-  const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-  const end = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+  const start = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
+  const end = Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), to.getUTCDate());
   return Math.round((end - start) / 86400000);
 }
 
 function findNextLunarBirthday(targetMonth, targetDay, fromDate) {
-  const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+  const start = new Date(Date.UTC(
+    fromDate.getUTCFullYear(),
+    fromDate.getUTCMonth(),
+    fromDate.getUTCDate(),
+  ));
 
   for (let offset = 0; offset <= 400; offset += 1) {
     const probe = new Date(start);
-    probe.setDate(start.getDate() + offset);
+    probe.setUTCDate(start.getUTCDate() + offset);
     const lunar = getLunarMonthDay(probe);
 
     if (lunar.month === targetMonth && lunar.day === targetDay) {
@@ -691,29 +710,13 @@ function getLunarBirthdays() {
 }
 
 function getTodayCacheKey(date) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const year = parts.find((part) => part.type === "year")?.value || "0000";
-  const month = parts.find((part) => part.type === "month")?.value || "00";
-  const day = parts.find((part) => part.type === "day")?.value || "00";
-  return `${year}-${month}-${day}`;
+  const { year, month, day } = getChinaDateParts(date);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 function getChinaTodayDate(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const year = parts.find((part) => part.type === "year")?.value || "0000";
-  const month = parts.find((part) => part.type === "month")?.value || "01";
-  const day = parts.find((part) => part.type === "day")?.value || "01";
-  return new Date(`${year}-${month}-${day}T00:00:00+08:00`);
+  const { year, month, day } = getChinaDateParts(date);
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 function updateBirthdayReminder() {
