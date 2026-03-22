@@ -20,7 +20,14 @@
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow">自家专用小站</p>
-          <h1>祝 YIYA YIFAN 发大财<br />大头菜大赢家</h1>
+          <div id="birthdayHeroBanner" class="birthday-hero-banner" hidden>
+            <span class="hero-rocket hero-rocket-left">🚀</span>
+            <span class="hero-rocket hero-rocket-mid">🚀</span>
+            <p id="birthdayHeroText" class="birthday-hero-text">今天有人过生日啦</p>
+            <span class="hero-rocket hero-rocket-mid">🚀</span>
+            <span class="hero-rocket hero-rocket-right">🚀</span>
+          </div>
+          <h1 id="mainHeadline">祝 YIYA YIFAN 发大财<br />大头菜大赢家</h1>
           <p class="lead">
             记一下这周菜价，轻松看看什么时候卖更开心一点。
           </p>
@@ -60,6 +67,25 @@
         </div>
 
       </section>
+
+      <section id="blessingWall" class="blessing-wall" aria-label="吉祥祝福墙" hidden>
+        <div class="blessing-wall-header">
+          <div>
+            <p class="eyebrow">大吉大利祝福墙</p>
+            <h2>健康、美丽、长寿、幸福，统统都要</h2>
+          </div>
+          <p class="panel-note">今天就把所有好福气、好彩头、好兆头，一口气全都收下。</p>
+        </div>
+        <div id="blessingList" class="blessing-list">
+          <p class="loading-row">祝福加载中...</p>
+        </div>
+      </section>
+
+      <details class="home-extra" aria-label="更多家庭信息">
+        <summary class="home-extra-summary">
+          <span>更多家庭信息</span>
+          <span class="home-extra-tip">点击展开</span>
+        </summary>
 
       <section class="crypto-reminder" aria-label="BTC ETH 价格提醒">
         <div class="crypto-reminder-copy">
@@ -137,6 +163,14 @@
           </article>
         </div>
       </section>
+
+      </details>
+
+      <details id="turnipExtra" class="home-extra turnip-extra" aria-label="大头菜价格预测" open>
+        <summary class="home-extra-summary">
+          <span>大头菜价格预测</span>
+          <span class="home-extra-tip">点击收起</span>
+        </summary>
 
       <section class="metrics-grid" aria-label="本周概览">
         <article class="metric-card">
@@ -253,6 +287,8 @@
           </table>
         </div>
       </section>
+
+      </details>
 
     </main>
 

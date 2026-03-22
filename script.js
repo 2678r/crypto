@@ -1,6 +1,7 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
 const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v2";
+const BIRTHDAY_PREVIEW_MODE = false;
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
 const NEWS_FEEDS = [
@@ -85,6 +86,7 @@ const cryptoStatus = document.querySelector("#cryptoStatus");
 const newsStatus = document.querySelector("#newsStatus");
 const newsList = document.querySelector("#newsList");
 const placesStatus = document.querySelector("#placesStatus");
+const blessingList = document.querySelector("#blessingList");
 const todayDate = document.querySelector("#todayDate");
 const turkeyTime = document.querySelector("#turkeyTime");
 const chinaTime = document.querySelector("#chinaTime");
@@ -92,6 +94,12 @@ const todayLunar = document.querySelector("#todayLunar");
 const birthdayName = document.querySelector("#birthdayName");
 const birthdayMeta = document.querySelector("#birthdayMeta");
 const dailyQuote = document.querySelector("#dailyQuote");
+const mainHeadline = document.querySelector("#mainHeadline");
+const birthdayHeroBanner = document.querySelector("#birthdayHeroBanner");
+const birthdayHeroText = document.querySelector("#birthdayHeroText");
+const heroCopy = document.querySelector(".hero-copy");
+const blessingWall = document.querySelector("#blessingWall");
+const turnipExtra = document.querySelector("#turnipExtra");
 
 const familyBirthdays = [
   { name: "毛毛", birth: "2014-01-05" },
@@ -159,6 +167,136 @@ const dailyQuotes = [
   "一家人平平安安，就是最大的福气。",
   "好心情，会带来好消息。",
   "认真生活的人，运气都不会太差。",
+];
+
+const blessingKeywords = [
+  "福寿绵长",
+  "岁岁平安",
+  "红光满面",
+  "容光焕发",
+  "笑口常开",
+  "心情明朗",
+  "长命百岁",
+  "耳聪目明",
+  "家和美满",
+  "和和美美",
+  "亲亲热热",
+  "团团圆圆",
+  "团圆",
+  "顺顺利利",
+  "喜喜庆庆",
+  "日日平安",
+  "福星高照",
+  "吉星高照",
+  "福禄寿喜",
+  "热气腾腾",
+  "神清气爽",
+  "精神抖擞",
+  "气色越来越好",
+  "越活越年轻",
+  "越看越漂亮",
+  "容颜常美",
+  "温柔",
+  "可爱",
+  "漂亮",
+  "健康",
+  "快乐",
+  "幸福",
+  "长寿",
+  "美丽",
+  "平安",
+  "好运",
+  "福气",
+  "安康",
+  "吉祥",
+  "喜气",
+  "平安顺遂",
+  "顺心",
+  "顺利",
+  "旺",
+  "有福",
+  "福寿",
+  "福气满满",
+  "年轻",
+  "明朗",
+  "甜",
+  "开怀",
+  "厚待",
+  "舒服",
+  "热爱",
+  "热望",
+  "美",
+  "亮",
+  "暖",
+  "好看",
+];
+
+const blessingMessages = [
+  "愿你身体硬朗像小太阳，一年四季都精神饱满，元气满满。",
+  "愿你天天红光满面，气色越来越好，走到哪里都自带福气。",
+  "愿你健康常在，平安常在，快乐常在，好运常在。",
+  "愿你福气冲天，喜气连连，运气旺到像开了金光外挂。",
+  "愿你越活越年轻，越看越漂亮，越笑越有福相。",
+  "愿你每天醒来都神清气爽，吃得香睡得甜，百病不沾。",
+  "愿你一年比一年顺，一岁比一岁旺，日日都是好时辰。",
+  "愿你笑口常开，眉眼带喜，所有烦恼都自动绕道走开。",
+  "愿你身体棒棒，心情亮亮，日子甜甜，福气长长。",
+  "愿你今天平安，明天平安，天天平安，岁岁平安。",
+  "愿你容光焕发，精神抖擞，气质美得像一路开花。",
+  "愿你长命百岁，耳聪目明，腿脚有劲，日子越过越有神。",
+  "愿你家中常有欢笑，桌上常有热饭，心里常有温暖。",
+  "愿你全家和和美美，亲亲热热，天天都有团圆的喜气。",
+  "愿你家门口进的是好消息，窗户外吹的是好运风。",
+  "愿你家里福星高照，喜鹊常来，财神常住，幸福常满。",
+  "愿你出门见喜，回家见福，抬头见顺，低头见财。",
+  "愿你越活越舒展，越过越松弛，心宽福自来。",
+  "愿你皮肤亮亮，眼睛有光，笑起来像春天一样好看。",
+  "愿你饭吃得香，觉睡得沉，梦做得甜，运走得顺。",
+  "愿你今天被好运抱个满怀，明天被福气围个满圈。",
+  "愿你要风得风，要喜得喜，要顺得顺，要福得福。",
+  "愿你身边的人都温柔，眼前的事都顺手，未来的路都宽阔。",
+  "愿你健康这件事稳稳当当，幸福这件事长长久久。",
+  "愿你一年到头没有大烦恼，小日子一天天越过越旺。",
+  "愿你心里有底气，脸上有喜气，生活里全是好彩气。",
+  "愿你家人安康，彼此惦记，互相关心，日子热气腾腾。",
+  "愿你每天都有被宠爱的感觉，也有被祝福包围的运气。",
+  "愿你漂亮得发光，温柔得发亮，幸福得发热。",
+  "愿你身体像老松一样稳，福气像江海一样长。",
+  "愿你从早到晚都顺顺利利，从年头到年尾都喜喜庆庆。",
+  "愿你走路带风，做事有成，开口有喜，闭眼有安。",
+  "愿你每个愿望都不落空，每份期待都有好回音。",
+  "愿你家里灯火温暖，饭菜飘香，日子过得有滋有味。",
+  "愿你越老越有福，越老越有气场，越老越被疼爱。",
+  "愿你福寿绵长，笑容常在，岁月都舍不得催你老。",
+  "愿你心情像晴天一样明朗，身体像青松一样结实。",
+  "愿你想见的人常见，想过的日子都能过成。",
+  "愿你小病不来，大病远去，身体稳得像福山。",
+  "愿你气运长虹，吉星高照，人生一路开满吉祥花。",
+  "愿你美丽不止外表，心也柔软，命也明亮。",
+  "愿你福禄寿喜样样不缺，平安顺心件件都来。",
+  "愿你家里老人硬朗，孩子开心，大人顺心，处处是福。",
+  "愿你有热饭热汤，也有热爱热望，天天好心情。",
+  "愿你今天笑得最甜，明天福气更甜，后天好运冲天。",
+  "愿你天冷有暖气，天热有清风，四季都有舒服日子。",
+  "愿你有被生活厚待的运气，也有把日子过好的本事。",
+  "愿你日子不慌不忙，身体不疼不痒，心里不忧不惧。",
+  "愿你眼里有光，脚下有路，身后有家，前方有福。",
+  "愿你家里一团和气，出门一路喜气，回家满屋福气。",
+  "愿你身体越来越轻快，心情越来越开阔，福气越来越厚。",
+  "愿你既被岁月善待，也被家人宠爱，还被好运偏爱。",
+  "愿你笑一笑喜上眉梢，走一走好运开道，坐一坐福星来到。",
+  "愿你今后每一年都比上一年更平安、更美、更旺。",
+  "愿你福气装满口袋，快乐装满心房，幸福装满日常。",
+  "愿你身体里的每一个细胞都在说：今天状态真好。",
+  "愿你家和万事兴，门开千般喜，窗进万道福。",
+  "愿你从春到冬都有好消息，从早到晚都有好心情。",
+  "愿你被健康守护，被好运偏心，被幸福长期录用。",
+  "愿你一生少风雨，多晴朗；少焦虑，多欢喜。",
+  "愿你全家福气翻倍，健康翻倍，温暖翻倍，幸福翻倍。",
+  "愿你人逢喜事精神爽，家有吉庆万事昌。",
+  "愿你今天被爱包围，明天被福围绕，后天被好运追着跑。",
+  "愿你活得漂亮，睡得安稳，笑得开怀，福得实在。",
+  "愿你福如东海滚滚来，寿比南山稳稳在，家和万事样样开。",
 ];
 
 let state = loadState();
@@ -407,6 +545,26 @@ function renderNews(items) {
     .join("");
 }
 
+function renderBlessingWall() {
+  if (!blessingList) return;
+
+  blessingList.innerHTML = blessingMessages
+    .map((message) => `<div class="blessing-item">${highlightBlessingKeywords(message)}</div>`)
+    .join("");
+}
+
+function highlightBlessingKeywords(message) {
+  const escaped = escapeHtml(message);
+  const sortedKeywords = [...new Set(blessingKeywords)].sort((a, b) => b.length - a.length);
+  return sortedKeywords.reduce((text, keyword) => {
+    const pattern = new RegExp(keyword, "g");
+    return text.replace(
+      pattern,
+      `<span class="blessing-keyword">${keyword}</span>`,
+    );
+  }, escaped);
+}
+
 function formatCityTime(timezone) {
   return new Intl.DateTimeFormat("zh-CN", {
     hour: "2-digit",
@@ -422,6 +580,7 @@ function formatTodayLunar(date) {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Asia/Shanghai",
     }).formatToParts(date);
 
     const year = lunarParts.find((part) => part.type === "relatedYear")?.value || "";
@@ -438,6 +597,7 @@ function getLunarMonthDay(date) {
   const parts = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
     month: "long",
     day: "numeric",
+    timeZone: "Asia/Shanghai",
   }).formatToParts(date);
 
   return {
@@ -530,18 +690,55 @@ function getLunarBirthdays() {
 }
 
 function getTodayCacheKey(date) {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value || "0000";
+  const month = parts.find((part) => part.type === "month")?.value || "00";
+  const day = parts.find((part) => part.type === "day")?.value || "00";
+  return `${year}-${month}-${day}`;
+}
+
+function getChinaTodayDate(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value || "0000";
+  const month = parts.find((part) => part.type === "month")?.value || "01";
+  const day = parts.find((part) => part.type === "day")?.value || "01";
+  return new Date(`${year}-${month}-${day}T00:00:00+08:00`);
 }
 
 function updateBirthdayReminder() {
   if (!birthdayName || !birthdayMeta) return;
 
-  const today = new Date();
-  const todayKey = getTodayCacheKey(today);
+  const now = new Date();
+  const today = getChinaTodayDate(now);
+
+  if (BIRTHDAY_PREVIEW_MODE) {
+    const previewBirthday = {
+      name: "爷爷",
+      lunarLabel: "五月16",
+      daysLeft: 0,
+    };
+    updateBirthdayHero(previewBirthday);
+    birthdayName.textContent = `${previewBirthday.name} 快过生日啦`;
+    birthdayMeta.textContent = `今天是农历${previewBirthday.lunarLabel}，正好生日。`;
+    return;
+  }
+
+  const todayKey = getTodayCacheKey(now);
   const upcomingCache = loadJsonCache(BIRTHDAY_TODAY_CACHE_KEY);
 
   if (upcomingCache?.todayKey === todayKey && upcomingCache.upcoming) {
     const upcoming = upcomingCache.upcoming;
+    updateBirthdayHero(upcoming);
     birthdayName.textContent = `${upcoming.name} 快过生日啦`;
     birthdayMeta.textContent =
       upcoming.daysLeft === 0
@@ -572,6 +769,7 @@ function updateBirthdayReminder() {
   const upcoming = candidates[0];
 
   if (!upcoming) {
+    updateBirthdayHero(null);
     birthdayName.textContent = "暂时算不出来";
     birthdayMeta.textContent = "生日提醒加载失败。";
     return;
@@ -586,6 +784,7 @@ function updateBirthdayReminder() {
     },
   });
 
+  updateBirthdayHero(upcoming);
   birthdayName.textContent = `${upcoming.name} 快过生日啦`;
 
   if (upcoming.daysLeft === 0) {
@@ -594,6 +793,28 @@ function updateBirthdayReminder() {
     birthdayMeta.textContent =
       `农历${upcoming.lunarLabel}，还有 ${upcoming.daysLeft} 天。`;
   }
+}
+
+function updateBirthdayHero(upcoming) {
+  if (!birthdayHeroBanner || !birthdayHeroText || !mainHeadline || !heroCopy) return;
+
+  if (upcoming?.daysLeft === 0) {
+    birthdayHeroBanner.hidden = false;
+    if (blessingWall) blessingWall.hidden = false;
+    if (turnipExtra) turnipExtra.open = false;
+    document.body.classList.add("birthday-page");
+    birthdayHeroText.textContent = `今天给 ${upcoming.name} 过生日啦`;
+    mainHeadline.innerHTML = `🚀 祝 ${upcoming.name} 生日快乐<br />今天一路发发发`;
+    heroCopy.classList.add("birthday-mode");
+    return;
+  }
+
+  birthdayHeroBanner.hidden = true;
+  if (blessingWall) blessingWall.hidden = true;
+  if (turnipExtra) turnipExtra.open = true;
+  document.body.classList.remove("birthday-page");
+  mainHeadline.innerHTML = "祝 YIYA YIFAN 发大财<br />大头菜大赢家";
+  heroCopy.classList.remove("birthday-mode");
 }
 
 function updateDailyQuote() {
@@ -615,6 +836,7 @@ function updateTodayInfo() {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Asia/Shanghai",
     }).format(now);
   }
 
@@ -904,6 +1126,7 @@ if (resetButton) {
 
 createInputs();
 render();
+renderBlessingWall();
 updateTodayInfo();
 updateBirthdayReminder();
 updateDailyQuote();

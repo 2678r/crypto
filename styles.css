@@ -16,6 +16,16 @@
   --shadow: 0 24px 70px rgba(118, 137, 77, 0.14);
 }
 
+body.birthday-page {
+  --panel: rgba(146, 12, 18, 0.86);
+  --panel-strong: rgba(170, 18, 24, 0.94);
+  --line: rgba(255, 214, 124, 0.22);
+  --text: #fff3dd;
+  --muted: #ffd89a;
+  --leaf: #ffca66;
+  --shadow: 0 24px 70px rgba(104, 7, 12, 0.34);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -29,6 +39,14 @@ body {
     radial-gradient(circle at 10% 10%, rgba(255, 228, 162, 0.18), transparent 18%),
     radial-gradient(circle at 85% 14%, rgba(160, 214, 152, 0.16), transparent 22%),
     linear-gradient(180deg, #ffffff 0%, #fcfef8 42%, #f6faee 100%);
+}
+
+body.birthday-page {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 210, 104, 0.18), transparent 16%),
+    radial-gradient(circle at 86% 16%, rgba(255, 228, 156, 0.14), transparent 18%),
+    radial-gradient(circle at 50% 100%, rgba(255, 176, 94, 0.12), transparent 24%),
+    linear-gradient(180deg, #8f0f14 0%, #b5161c 38%, #d62828 100%);
 }
 
 .sky {
@@ -51,6 +69,14 @@ body {
   right: -5rem;
   bottom: -5rem;
   background: rgba(165, 216, 152, 0.42);
+}
+
+body.birthday-page .sky-left {
+  background: rgba(255, 193, 93, 0.24);
+}
+
+body.birthday-page .sky-right {
+  background: rgba(255, 214, 120, 0.22);
 }
 
 .app-shell {
@@ -105,6 +131,75 @@ h1 {
   max-width: 12ch;
   color: #7b4b16;
   text-wrap: balance;
+}
+
+.birthday-hero-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 247, 204, 0.9), transparent 30%),
+    radial-gradient(circle at 80% 35%, rgba(255, 238, 184, 0.85), transparent 28%),
+    linear-gradient(135deg, rgba(255, 222, 128, 0.98) 0%, rgba(255, 170, 86, 0.98) 100%);
+  border: 1px solid rgba(216, 157, 43, 0.36);
+  box-shadow:
+    0 18px 34px rgba(216, 157, 43, 0.18),
+    inset 0 1px 0 rgba(255, 248, 214, 0.7);
+}
+
+body.birthday-page .birthday-hero-banner {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 244, 197, 0.28), transparent 26%),
+    radial-gradient(circle at 80% 35%, rgba(255, 232, 166, 0.24), transparent 24%),
+    linear-gradient(135deg, rgba(155, 11, 19, 0.98) 0%, rgba(196, 20, 28, 0.98) 58%, rgba(225, 46, 42, 0.98) 100%);
+  border: 1px solid rgba(255, 209, 107, 0.4);
+  box-shadow:
+    0 20px 38px rgba(95, 5, 10, 0.28),
+    inset 0 1px 0 rgba(255, 226, 150, 0.24);
+}
+
+.birthday-hero-text {
+  color: #8e5306;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 rgba(255, 248, 214, 0.7);
+}
+
+body.birthday-page .birthday-hero-text {
+  color: #ffe39d;
+  text-shadow: 0 1px 0 rgba(86, 10, 10, 0.4);
+}
+
+.hero-rocket {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(216, 157, 43, 0.2));
+}
+
+.hero-rocket-left,
+.hero-rocket-right {
+  font-size: 1.8rem;
+}
+
+.hero-rocket-mid {
+  font-size: 1.35rem;
+}
+
+.hero-copy.birthday-mode h1 {
+  color: #ba4c26;
+}
+
+body.birthday-page .hero-copy.birthday-mode h1 {
+  color: #ffe8b0;
+  text-shadow:
+    0 2px 0 rgba(120, 8, 14, 0.28),
+    0 12px 24px rgba(65, 5, 8, 0.18);
 }
 
 .lead {
@@ -567,6 +662,154 @@ h1 {
   color: #5e4e1e;
 }
 
+.blessing-wall {
+  margin-bottom: 16px;
+  padding: 22px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 231, 165, 0.44), transparent 22%),
+    radial-gradient(circle at 88% 14%, rgba(255, 191, 129, 0.22), transparent 18%),
+    linear-gradient(180deg, rgba(255, 249, 227, 0.98) 0%, rgba(255, 244, 212, 0.96) 100%);
+  border: 1px solid rgba(216, 157, 43, 0.22);
+  box-shadow: 0 18px 40px rgba(216, 157, 43, 0.1);
+}
+
+body.birthday-page .blessing-wall {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 221, 140, 0.22), transparent 18%),
+    radial-gradient(circle at 86% 16%, rgba(255, 235, 180, 0.16), transparent 16%),
+    linear-gradient(180deg, rgba(149, 12, 18, 0.96) 0%, rgba(179, 17, 24, 0.96) 56%, rgba(195, 26, 28, 0.96) 100%);
+  border: 1px solid rgba(255, 207, 110, 0.24);
+  box-shadow: 0 24px 48px rgba(75, 5, 9, 0.24);
+}
+
+.blessing-wall-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.blessing-wall-header h2 {
+  font-size: 1.55rem;
+  color: #8d5810;
+}
+
+body.birthday-page .blessing-wall-header h2 {
+  color: #ffe3a1;
+}
+
+.blessing-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.blessing-item {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 252, 241, 0.88);
+  border: 1px solid rgba(216, 157, 43, 0.14);
+  color: #7b5617;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  box-shadow: 0 8px 16px rgba(216, 157, 43, 0.06);
+}
+
+body.birthday-page .blessing-item {
+  background: rgba(116, 10, 16, 0.44);
+  border: 1px solid rgba(255, 208, 108, 0.16);
+  color: #fff1d7;
+}
+
+.blessing-keyword {
+  display: inline-block;
+  margin: 0 3px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 1.42em;
+  font-weight: 900;
+  line-height: 1.12;
+  color: #b31111;
+  background: linear-gradient(180deg, rgba(255, 244, 185, 0.96), rgba(255, 220, 110, 0.92));
+  box-shadow: 0 6px 16px rgba(208, 63, 29, 0.2);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+body.birthday-page .blessing-keyword {
+  font-size: 1.56em;
+  color: #8d0505;
+  background: linear-gradient(180deg, rgba(255, 245, 190, 0.98), rgba(255, 208, 84, 0.96));
+  box-shadow: 0 10px 22px rgba(60, 5, 7, 0.28);
+}
+
+.home-extra {
+  margin-bottom: 16px;
+}
+
+.home-extra-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 20px;
+  background: rgba(248, 252, 244, 0.94);
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 34px rgba(118, 137, 77, 0.08);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 800;
+  color: #6b5117;
+}
+
+body.birthday-page .home-extra-summary {
+  background:
+    linear-gradient(135deg, rgba(140, 12, 18, 0.92), rgba(176, 18, 25, 0.94));
+  border: 1px solid rgba(255, 212, 114, 0.22);
+  box-shadow: 0 16px 34px rgba(77, 6, 10, 0.24);
+  color: #ffe6af;
+}
+
+.home-extra-summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-extra-tip {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.home-extra[open] .home-extra-tip {
+  color: transparent;
+  position: relative;
+}
+
+.home-extra[open] .home-extra-tip::before {
+  content: "点击收起";
+  position: absolute;
+  right: 0;
+  color: var(--muted);
+}
+
+.home-extra > .crypto-reminder,
+.home-extra > .news-strip,
+.home-extra > .places-strip {
+  margin-top: 14px;
+}
+
+.turnip-extra {
+  margin-bottom: 16px;
+}
+
+.turnip-extra > .metrics-grid,
+.turnip-extra > .content-grid,
+.turnip-extra > .board {
+  margin-top: 14px;
+}
+
 .metrics-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -902,6 +1145,10 @@ tbody tr:hover {
   .places-grid {
     grid-template-columns: 1fr;
   }
+
+  .blessing-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -959,6 +1206,23 @@ tbody tr:hover {
     font-size: 1.02rem;
   }
 
+  .birthday-hero-banner {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 14px;
+    border-radius: 16px;
+    gap: 8px;
+  }
+
+  .hero-rocket-left,
+  .hero-rocket-right {
+    font-size: 1.45rem;
+  }
+
+  .hero-rocket-mid {
+    font-size: 1.1rem;
+  }
+
   .news-strip {
     padding: 18px;
     border-radius: 20px;
@@ -967,6 +1231,16 @@ tbody tr:hover {
   .places-strip {
     padding: 18px;
     border-radius: 20px;
+  }
+
+  .blessing-wall {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .home-extra-summary {
+    padding: 12px 14px;
+    border-radius: 16px;
   }
 
   .news-strip-header {
@@ -981,11 +1255,21 @@ tbody tr:hover {
     gap: 8px;
   }
 
+  .blessing-wall-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
   .news-strip-header h2 {
     font-size: 1.3rem;
   }
 
   .places-strip-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .blessing-wall-header h2 {
     font-size: 1.3rem;
   }
 
@@ -997,6 +1281,10 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .blessing-list {
+    grid-template-columns: 1fr;
+  }
+
   .news-item {
     border-radius: 16px;
     padding: 13px 14px;
@@ -1005,6 +1293,11 @@ tbody tr:hover {
   .place-card {
     border-radius: 16px;
     padding: 14px;
+  }
+
+  .blessing-item {
+    border-radius: 16px;
+    padding: 12px 13px;
   }
 
   .fortune-board {
