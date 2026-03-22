@@ -3,6 +3,7 @@ const MESSAGE_BOARD_KEY = "family-message-board-v1";
 const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_jyQ8EuXV2kRTcRKtauUpIw_0zQEDz2y";
 const SUPABASE_MESSAGE_TABLE = "family_messages";
+const MESSAGE_REFRESH_MS = 30000;
 const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
 const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v3";
 const BIRTHDAY_PREVIEW_MODE = false;
@@ -630,8 +631,9 @@ function renderMessageBoard(entries = loadMessageEntries()) {
     .join("");
 }
 
-async function syncMessageBoard() {
+async function syncMessageBoard(options = {}) {
   if (!messageList) return;
+  const { silent = false } = options;
 
   try {
     const sharedEntries = await fetchSharedMessages();
@@ -639,11 +641,15 @@ async function syncMessageBoard() {
     messageBoardMode = "shared";
     saveMessageEntries(orderedEntries);
     renderMessageBoard(orderedEntries);
-    setMessageStatus("全家共享留言板已连接，大家打开网页都能看到这些留言。");
+    if (!silent) {
+      setMessageStatus("全家共享留言板已连接，大家打开网页都能看到这些留言。");
+    }
   } catch {
     messageBoardMode = "local";
     renderMessageBoard();
-    setMessageStatus("共享留言板暂时没连上，现在先显示这台设备里的留言。");
+    if (!silent) {
+      setMessageStatus("共享留言板暂时没连上，现在先显示这台设备里的留言。");
+    }
   }
 }
 
@@ -668,7 +674,7 @@ async function handleMessageSubmit(event) {
   if (messageBoardMode === "shared") {
     try {
       await createSharedMessage(entry);
-      await syncMessageBoard();
+      await syncMessageBoard({ silent: true });
     } catch {
       const entries = loadMessageEntries();
       entries.push(entry);
@@ -1314,6 +1320,11 @@ render();
 renderBlessingWall();
 renderMessageBoard();
 syncMessageBoard();
+window.setInterval(() => {
+  if (document.visibilityState === "visible") {
+    syncMessageBoard({ silent: true });
+  }
+}, MESSAGE_REFRESH_MS);
 updateTodayInfo();
 updateBirthdayReminder();
 updateDailyQuote();
