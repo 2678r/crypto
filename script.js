@@ -3,8 +3,16 @@ const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
 const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v2";
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
-const NEWS_API_URL =
-  "https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en";
+const NEWS_FEEDS = [
+  {
+    source: "Reuters",
+    url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/Reuters/worldNews",
+  },
+  {
+    source: "BBC",
+    url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml",
+  },
+];
 const WEATHER_LOCATIONS = [
   {
     id: "istanbul",
@@ -100,23 +108,23 @@ const familyBirthdays = [
 const fallbackHeadlines = [
   {
     title: "Global markets watch inflation, rates, and fresh risk signals.",
-    source: "World",
-    link: "https://news.google.com/",
+    source: "Reuters",
+    link: "https://www.reuters.com/world/",
   },
   {
     title: "Major technology and AI developments continue shaping global headlines.",
-    source: "Tech",
-    link: "https://news.google.com/",
+    source: "BBC",
+    link: "https://www.bbc.com/news/world",
   },
   {
     title: "Energy, shipping, and regional tensions remain key stories worldwide.",
-    source: "Economy",
-    link: "https://news.google.com/",
+    source: "Reuters",
+    link: "https://www.reuters.com/world/",
   },
   {
     title: "各地市场与政策变化，仍然是全球新闻关注重点。",
-    source: "中文",
-    link: "https://news.google.com/",
+    source: "BBC",
+    link: "https://www.bbc.com/news/world",
   },
 ];
 
@@ -387,7 +395,7 @@ function renderNews(items) {
     .map((item) => {
       const title = escapeHtml(item.title ?? "Untitled headline");
       const source = escapeHtml(getSourceLabel(item));
-      const link = item.link || "https://news.google.com/";
+      const link = item.link || "https://www.reuters.com/world/";
 
       return `
         <a class="news-item" href="${link}" target="_blank" rel="noreferrer">
@@ -783,32 +791,40 @@ async function loadNewsHeadlines() {
   newsStatus.textContent = "正在获取头条新闻...";
 
   try {
-    const response = await fetch(NEWS_API_URL, {
-      headers: { accept: "application/json" },
-    });
+    const responses = await Promise.all(
+      NEWS_FEEDS.map(async (feed) => {
+        const response = await fetch(feed.url, {
+          headers: { accept: "application/json" },
+        });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
 
-    const data = await response.json();
-    const items = Array.isArray(data.items) ? data.items : [];
+        const data = await response.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        return items.slice(0, 3).map((item) => ({
+          title: item.title,
+          source: feed.source,
+          link: item.link,
+          pubDate: item.pubDate || "",
+        }));
+      }),
+    );
+
+    const items = responses
+      .flat()
+      .sort((left, right) => String(right.pubDate).localeCompare(String(left.pubDate)));
 
     if (!items.length) {
       throw new Error("No items");
     }
 
-    renderNews(
-      items.map((item) => ({
-        title: item.title,
-        source: item.author || item.source || "Google News",
-        link: item.link,
-      })),
-    );
-    newsStatus.textContent = "显示 4 条世界头条，支持中英文标题。";
+    renderNews(items);
+    newsStatus.textContent = "显示 4 条世界头条，来源改为 Reuters / BBC。";
   } catch (error) {
     renderNews(fallbackHeadlines);
-    newsStatus.textContent = "实时头条暂时不可用，先显示备用新闻提示。";
+    newsStatus.textContent = "实时头条暂时不可用，先显示 Reuters / BBC 备用提示。";
     console.error(error);
   }
 }
