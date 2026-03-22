@@ -71,7 +71,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 28px;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 24px;
 }
 
@@ -113,6 +113,381 @@ h1 {
   color: var(--muted);
   font-size: 1rem;
   line-height: 1.65;
+}
+
+.fortune-wrapper {
+  position: relative;
+  width: 230px;
+  height: 250px;
+  flex: 0 0 230px;
+}
+
+.fortune-cloud {
+  position: absolute;
+  width: 84px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 244, 208, 0.9);
+  filter: blur(0.2px);
+}
+
+.fortune-cloud::before,
+.fortune-cloud::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  border-radius: 999px;
+  background: rgba(255, 244, 208, 0.95);
+}
+
+.fortune-cloud::before {
+  width: 26px;
+  height: 26px;
+  left: 12px;
+}
+
+.fortune-cloud::after {
+  width: 34px;
+  height: 34px;
+  right: 10px;
+}
+
+.fortune-cloud-left {
+  top: 20px;
+  left: 6px;
+}
+
+.fortune-cloud-right {
+  top: 34px;
+  right: 4px;
+  transform: scale(0.92);
+}
+
+.fortune-coins span {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f8d875 0%, #e3b83f 100%);
+  border: 3px solid rgba(163, 120, 30, 0.26);
+  box-shadow: 0 6px 14px rgba(216, 157, 43, 0.22);
+}
+
+.fortune-coins span::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: rgba(255, 252, 241, 0.9);
+}
+
+.fortune-coins span:nth-child(1) {
+  top: 56px;
+  left: 26px;
+}
+
+.fortune-coins span:nth-child(2) {
+  top: 36px;
+  right: 32px;
+}
+
+.fortune-coins span:nth-child(3) {
+  top: 78px;
+  right: 18px;
+}
+
+.fortune-god {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 170px;
+  height: 210px;
+  transform: translateX(-50%);
+  isolation: isolate;
+}
+
+.fortune-hat {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 108px;
+  height: 50px;
+  transform: translateX(-50%);
+  border-radius: 52px 52px 18px 18px;
+  background: linear-gradient(180deg, #d75642 0%, #bf3c2c 100%);
+  box-shadow: 0 10px 18px rgba(191, 60, 44, 0.18);
+  z-index: 4;
+}
+
+.fortune-hat::before,
+.fortune-hat::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  width: 38px;
+  height: 10px;
+  border-radius: 999px;
+  background: #d75642;
+}
+
+.fortune-hat::before {
+  left: -28px;
+}
+
+.fortune-hat::after {
+  right: -28px;
+}
+
+.hat-gem {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 18px;
+  height: 18px;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f9d46d 0%, #e3b83f 100%);
+}
+
+.fortune-face {
+  position: absolute;
+  left: 50%;
+  top: 34px;
+  width: 92px;
+  height: 88px;
+  transform: translateX(-50%);
+  border-radius: 40px;
+  background: linear-gradient(180deg, #ffe2ba 0%, #ffd5a4 100%);
+  border: 4px solid rgba(206, 146, 95, 0.18);
+  z-index: 3;
+}
+
+.eye,
+.blush,
+.mustache,
+.smile {
+  position: absolute;
+}
+
+.eye {
+  top: 32px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #5f4126;
+}
+
+.eye-left {
+  left: 24px;
+}
+
+.eye-right {
+  right: 24px;
+}
+
+.blush {
+  top: 42px;
+  width: 12px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(241, 141, 141, 0.55);
+}
+
+.blush-left {
+  left: 12px;
+}
+
+.blush-right {
+  right: 12px;
+}
+
+.mustache {
+  left: 50%;
+  bottom: 18px;
+  width: 38px;
+  height: 16px;
+  transform: translateX(-50%);
+}
+
+.mustache::before,
+.mustache::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  width: 18px;
+  height: 8px;
+  border-bottom: 4px solid #714923;
+  border-radius: 0 0 18px 18px;
+}
+
+.mustache::before {
+  left: 0;
+  transform: rotate(10deg);
+}
+
+.mustache::after {
+  right: 0;
+  transform: rotate(-10deg);
+}
+
+.smile {
+  left: 50%;
+  bottom: 14px;
+  width: 32px;
+  height: 18px;
+  transform: translateX(-50%);
+  border-bottom: 5px solid #8f5536;
+  border-radius: 0 0 24px 24px;
+  z-index: 2;
+}
+
+.smile::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 20px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 10px 10px 0 0;
+  background: rgba(243, 128, 130, 0.72);
+}
+
+.fortune-body {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  width: 132px;
+  height: 116px;
+  transform: translateX(-50%);
+  border-radius: 34px 34px 24px 24px;
+  background: linear-gradient(180deg, #e95b47 0%, #cb4333 100%);
+  box-shadow: 0 18px 28px rgba(203, 67, 51, 0.18);
+  z-index: 1;
+}
+
+.fortune-symbol {
+  position: absolute;
+  left: 50%;
+  top: 32px;
+  transform: translateX(-50%);
+  font-family: "ZCOOL KuaiLe", cursive;
+  font-size: 2.2rem;
+  color: #ffe596;
+}
+
+.fortune-arm {
+  position: absolute;
+  top: 104px;
+  width: 36px;
+  height: 78px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #e95b47 0%, #cb4333 100%);
+  z-index: 2;
+}
+
+.arm-left {
+  left: -4px;
+  transform: rotate(34deg);
+  transform-origin: top center;
+}
+
+.arm-right {
+  right: -4px;
+  transform: rotate(-34deg);
+  transform-origin: top center;
+}
+
+.turnip-bundle {
+  position: absolute;
+  left: -30px;
+  top: 48px;
+  width: 74px;
+  height: 74px;
+  transform: rotate(-38deg);
+}
+
+.turnip-leaf,
+.turnip-bulb {
+  position: absolute;
+}
+
+.turnip-leaf {
+  width: 22px;
+  height: 32px;
+  border-radius: 16px 16px 4px 16px;
+  background: linear-gradient(180deg, #8fcf70 0%, #5ea94a 100%);
+  transform-origin: bottom center;
+}
+
+.leaf-one {
+  left: 26px;
+  top: 2px;
+}
+
+.leaf-two {
+  left: 8px;
+  top: 12px;
+  transform: rotate(-28deg);
+}
+
+.leaf-three {
+  right: 8px;
+  top: 12px;
+  transform: rotate(28deg);
+}
+
+.turnip-bulb {
+  left: 11px;
+  bottom: 2px;
+  width: 50px;
+  height: 44px;
+  border-radius: 55% 55% 46% 46%;
+  background: linear-gradient(180deg, #fff8f1 0%, #f4f0eb 100%);
+  border: 3px solid rgba(212, 199, 188, 0.85);
+  box-shadow: 0 8px 16px rgba(151, 171, 101, 0.16);
+}
+
+.fortune-board {
+  position: absolute;
+  right: -42px;
+  top: 22px;
+  width: 98px;
+  padding: 11px 10px 14px;
+  border-radius: 22px 22px 28px 28px;
+  background: linear-gradient(180deg, #ffe28a 0%, #e2b540 100%);
+  border: 3px solid rgba(196, 136, 24, 0.5);
+  box-shadow: 0 12px 22px rgba(204, 143, 54, 0.2);
+  text-align: center;
+  transform: rotate(34deg);
+}
+
+.fortune-board::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 54px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(255, 241, 182, 0.94);
+}
+
+.fortune-board-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #97600c;
+}
+
+.fortune-board strong {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.15;
+  color: #714d11;
 }
 
 .hero-actions {
@@ -537,6 +912,10 @@ tbody tr:hover {
   .content-grid {
     grid-template-columns: 1fr;
   }
+
+  .fortune-wrapper {
+    align-self: center;
+  }
 }
 
 @media (max-width: 680px) {
@@ -564,6 +943,130 @@ tbody tr:hover {
   .hero {
     gap: 18px;
     margin-bottom: 18px;
+  }
+
+  .fortune-wrapper {
+    width: 170px;
+    height: 190px;
+    flex-basis: auto;
+  }
+
+  .fortune-god {
+    width: 132px;
+    height: 168px;
+  }
+
+  .fortune-hat {
+    width: 86px;
+    height: 40px;
+  }
+
+  .fortune-hat::before,
+  .fortune-hat::after {
+    width: 28px;
+    top: 14px;
+  }
+
+  .fortune-hat::before {
+    left: -20px;
+  }
+
+  .fortune-hat::after {
+    right: -20px;
+  }
+
+  .fortune-face {
+    top: 28px;
+    width: 72px;
+    height: 70px;
+  }
+
+  .eye {
+    top: 24px;
+    width: 8px;
+    height: 8px;
+  }
+
+  .eye-left {
+    left: 18px;
+  }
+
+  .eye-right {
+    right: 18px;
+  }
+
+  .blush {
+    top: 34px;
+    width: 10px;
+    height: 7px;
+  }
+
+  .fortune-body {
+    bottom: 22px;
+    width: 102px;
+    height: 92px;
+  }
+
+  .fortune-symbol {
+    top: 24px;
+    font-size: 1.7rem;
+  }
+
+  .fortune-arm {
+    top: 86px;
+    width: 28px;
+    height: 60px;
+  }
+
+  .turnip-bundle {
+    left: -18px;
+    top: 34px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .turnip-leaf {
+    width: 16px;
+    height: 24px;
+  }
+
+  .turnip-bulb {
+    left: 9px;
+    width: 38px;
+    height: 32px;
+  }
+
+  .fortune-board {
+    right: -32px;
+    top: 18px;
+    width: 78px;
+    padding: 9px 7px 10px;
+    border-radius: 14px;
+  }
+
+  .fortune-board::before {
+    width: 40px;
+    height: 16px;
+    top: -8px;
+  }
+
+  .fortune-board-label {
+    font-size: 0.62rem;
+  }
+
+  .fortune-board strong {
+    font-size: 0.8rem;
+  }
+
+  .smile {
+    width: 24px;
+    height: 14px;
+    bottom: 11px;
+  }
+
+  .smile::after {
+    width: 14px;
+    height: 6px;
   }
 
   .hero-actions {

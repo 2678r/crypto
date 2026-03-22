@@ -293,6 +293,23 @@ function renderCryptoCard(priceId, changeId, price, change) {
   }
 }
 
+function renderFortuneBtc(price) {
+  const fortuneNode = document.querySelector("#fortuneBtcPrice");
+  if (!fortuneNode) return;
+
+  if (typeof price !== "number" || Number.isNaN(price)) {
+    fortuneNode.textContent = "--";
+    return;
+  }
+
+  if (price >= 10_000) {
+    fortuneNode.textContent = `$${Math.round(price / 1000)}k`;
+    return;
+  }
+
+  fortuneNode.textContent = formatUsd(price);
+}
+
 async function loadCryptoPrices() {
   cryptoStatus.textContent = "正在获取实时价格...";
 
@@ -318,12 +335,14 @@ async function loadCryptoPrices() {
       data.ethereum?.usd,
       data.ethereum?.usd_24h_change,
     );
+    renderFortuneBtc(data.bitcoin?.usd);
     cryptoStatus.textContent = "实时价格来自 CoinGecko，会在每分钟刷新一次。";
   } catch (error) {
     document.querySelector("#btcPrice").textContent = "--";
     document.querySelector("#ethPrice").textContent = "--";
     document.querySelector("#btcChange").textContent = "暂不可用";
     document.querySelector("#ethChange").textContent = "暂不可用";
+    renderFortuneBtc(null);
     document.querySelector("#btcChange").className = "crypto-badge crypto-flat";
     document.querySelector("#ethChange").className = "crypto-badge crypto-flat";
     cryptoStatus.textContent = "暂时拿不到实时价格，稍后再试。";
