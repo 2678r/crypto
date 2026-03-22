@@ -729,7 +729,7 @@ function updateBirthdayReminder() {
       daysLeft: 0,
     };
     updateBirthdayHero(previewBirthday);
-    birthdayName.textContent = `${previewBirthday.name} 快过生日啦`;
+    birthdayName.textContent = `${previewBirthday.name} 今天过生日啦`;
     birthdayMeta.textContent = `今天是农历${previewBirthday.lunarLabel}，正好生日。`;
     return;
   }
@@ -740,7 +740,8 @@ function updateBirthdayReminder() {
   if (upcomingCache?.todayKey === todayKey && upcomingCache.upcoming) {
     const upcoming = upcomingCache.upcoming;
     updateBirthdayHero(upcoming);
-    birthdayName.textContent = `${upcoming.name} 快过生日啦`;
+    birthdayName.textContent =
+      upcoming.daysLeft === 0 ? `${upcoming.name} 今天过生日啦` : `${upcoming.name} 快过生日啦`;
     birthdayMeta.textContent =
       upcoming.daysLeft === 0
         ? `今天是农历${upcoming.lunarLabel}，正好生日。`
@@ -786,7 +787,8 @@ function updateBirthdayReminder() {
   });
 
   updateBirthdayHero(upcoming);
-  birthdayName.textContent = `${upcoming.name} 快过生日啦`;
+  birthdayName.textContent =
+    upcoming.daysLeft === 0 ? `${upcoming.name} 今天过生日啦` : `${upcoming.name} 快过生日啦`;
 
   if (upcoming.daysLeft === 0) {
     birthdayMeta.textContent = `今天是农历${upcoming.lunarLabel}，正好生日。`;
