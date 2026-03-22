@@ -105,6 +105,7 @@ const birthdayHeroText = document.querySelector("#birthdayHeroText");
 const heroCopy = document.querySelector(".hero-copy");
 const blessingWall = document.querySelector("#blessingWall");
 const familyExtra = document.querySelector("#familyExtra");
+const foodExtra = document.querySelector("#foodExtra");
 const turnipExtra = document.querySelector("#turnipExtra");
 const messageForm = document.querySelector("#messageForm");
 const messageNameInput = document.querySelector("#messageName");
@@ -998,6 +999,7 @@ function updateBirthdayHero(upcoming) {
     birthdayHeroBanner.hidden = false;
     if (blessingWall) blessingWall.hidden = false;
     if (familyExtra) familyExtra.open = false;
+    if (foodExtra) foodExtra.open = false;
     if (turnipExtra) turnipExtra.open = false;
     document.body.classList.add("birthday-page");
     birthdayHeroText.textContent = `今天给 ${upcoming.name} 过生日啦`;

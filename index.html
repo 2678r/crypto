@@ -211,49 +211,56 @@
 
       </details>
 
-      <section class="panel food-board" aria-label="国际食品价格">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Food Benchmarks</p>
-            <h2>国际食品价格</h2>
+      <details id="foodExtra" class="home-extra food-extra" aria-label="国际食品价格">
+        <summary class="home-extra-summary">
+          <span>国际食品价格</span>
+          <span class="home-extra-tip">点击展开</span>
+        </summary>
+
+        <section class="panel food-board">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Food Benchmarks</p>
+              <h2>国际食品价格</h2>
+            </div>
+            <p id="foodStatus" class="panel-note">基于世界银行 Pink Sheet 的官方月度美元基准价。</p>
           </div>
-          <p id="foodStatus" class="panel-note">基于世界银行 Pink Sheet 的官方月度美元基准价。</p>
-        </div>
 
-        <div id="foodGrid" class="food-grid">
-          <article class="food-card">
-            <p class="food-name">加载中</p>
-            <h3>--</h3>
-          </article>
-        </div>
+          <div id="foodGrid" class="food-grid">
+            <article class="food-card">
+              <p class="food-name">加载中</p>
+              <h3>--</h3>
+            </article>
+          </div>
 
-        <div class="food-compare">
-          <article class="food-compare-card">
-            <p class="food-compare-label">国际基准价</p>
-            <h3>看全球行情</h3>
-            <p class="food-compare-copy">
-              适合比较全球价格趋势，口径更统一，全部按美元展示，更像“国际市场参考价”。
-            </p>
-          </article>
+          <div class="food-compare">
+            <article class="food-compare-card">
+              <p class="food-compare-label">国际基准价</p>
+              <h3>看全球行情</h3>
+              <p class="food-compare-copy">
+                适合比较全球价格趋势，口径更统一，全部按美元展示，更像“国际市场参考价”。
+              </p>
+            </article>
 
-          <article class="food-compare-card">
-            <p class="food-compare-label">超市零售价参考</p>
-            <h3>看本地买菜体感</h3>
-            <p class="food-compare-copy">
-              会受到税费、城市、超市品牌、包装和促销影响，所以更贴近生活，但跨国家不一定能直接对比。
-            </p>
-          </article>
-        </div>
+            <article class="food-compare-card">
+              <p class="food-compare-label">超市零售价参考</p>
+              <h3>看本地买菜体感</h3>
+              <p class="food-compare-copy">
+                会受到税费、城市、超市品牌、包装和促销影响，所以更贴近生活，但跨国家不一定能直接对比。
+              </p>
+            </article>
+          </div>
 
-        <p class="food-footnote">
-          说明：这里展示的是国际基准价，不是各国超市零售价。
-          <a
-            href="https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Pink-Sheet-March-2026.pdf"
-            target="_blank"
-            rel="noreferrer"
-          >来源：World Bank Pink Sheet（2026年3月3日发布，含2026年2月月度均价）</a>
-        </p>
-      </section>
+          <p class="food-footnote">
+            说明：这里展示的是国际基准价，不是各国超市零售价。
+            <a
+              href="https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Pink-Sheet-March-2026.pdf"
+              target="_blank"
+              rel="noreferrer"
+            >来源：World Bank Pink Sheet（2026年3月3日发布，含2026年2月月度均价）</a>
+          </p>
+        </section>
+      </details>
 
       <details id="turnipExtra" class="home-extra turnip-extra" aria-label="大头菜价格预测" open>
         <summary class="home-extra-summary">
