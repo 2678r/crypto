@@ -223,10 +223,10 @@ function renderTable(buyPrice) {
 
       return `
         <tr>
-          <td>${slot.label}</td>
-          <td>${value === null ? "--" : `${value} 铃钱`}</td>
-          <td class="${delta === null ? "" : getDeltaClass(delta)}">${deltaText}</td>
-          <td><span class="status-pill ${pill.className}">${pill.label}</span></td>
+          <td data-label="时段">${slot.label}</td>
+          <td data-label="价格">${value === null ? "--" : `${value} 铃钱`}</td>
+          <td data-label="相对买入价" class="${delta === null ? "" : getDeltaClass(delta)}">${deltaText}</td>
+          <td data-label="状态"><span class="status-pill ${pill.className}">${pill.label}</span></td>
         </tr>
       `;
     })

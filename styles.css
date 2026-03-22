@@ -84,6 +84,21 @@ body {
   font-weight: 800;
 }
 
+.blessing {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 244, 211, 0.92);
+  border: 1px solid rgba(216, 157, 43, 0.24);
+  color: #9a6510;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 10px 30px rgba(216, 157, 43, 0.12);
+}
+
 h1,
 h2,
 h3,
@@ -119,6 +134,10 @@ h1 {
   align-items: flex-end;
   gap: 12px;
   min-width: 250px;
+}
+
+.hero-actions button {
+  width: 100%;
 }
 
 .primary-button,
@@ -265,6 +284,8 @@ input {
   color: var(--text);
   font-size: 1rem;
   font-weight: 800;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .mini-tip {
@@ -450,7 +471,49 @@ tbody tr:hover {
   .app-shell {
     width: min(100% - 20px, 100%);
     padding-top: 20px;
-    padding-bottom: 34px;
+    padding-bottom: 28px;
+  }
+
+  h1 {
+    font-size: 2.3rem;
+    max-width: none;
+  }
+
+  .blessing {
+    font-size: 0.84rem;
+    padding: 7px 12px;
+    margin-bottom: 10px;
+  }
+
+  .lead,
+  .panel-note,
+  .metric-detail,
+  .forecast-copy,
+  .mini-tip,
+  .status-text {
+    font-size: 0.94rem;
+    line-height: 1.55;
+  }
+
+  .hero {
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .hero-actions {
+    position: sticky;
+    bottom: 12px;
+    z-index: 3;
+    padding: 12px;
+    border-radius: 22px;
+    background: rgba(255, 248, 224, 0.92);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 16px 40px rgba(120, 96, 48, 0.12);
+  }
+
+  .status-text {
+    text-align: left;
   }
 
   .metrics-grid,
@@ -461,5 +524,113 @@ tbody tr:hover {
   .metric-card,
   .panel {
     border-radius: 22px;
+    padding: 18px;
+  }
+
+  .panel-heading {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .panel-heading h2 {
+    font-size: 1.45rem;
+  }
+
+  .metric-card h2,
+  .forecast-box h3 {
+    font-size: 1.35rem;
+  }
+
+  .buy-row {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .field-card,
+  .mini-tip,
+  .slot-card,
+  .forecast-box {
+    border-radius: 18px;
+  }
+
+  .field-card,
+  .slot-card,
+  .forecast-box {
+    padding: 14px;
+  }
+
+  input {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  table {
+    min-width: 0;
+  }
+
+  tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  tbody tr {
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(255, 249, 230, 0.88);
+    border: 1px solid var(--line);
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 249, 230, 0.88);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(133, 111, 66, 0.12);
+    font-size: 0.95rem;
+  }
+
+  td:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  td::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+
+  .loading-row {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .loading-row::before {
+    content: none;
   }
 }
