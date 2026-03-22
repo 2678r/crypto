@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>全球市场版</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Nunito:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./market.css" />
+  </head>
+  <body>
+    <div class="market-glow market-glow-left"></div>
+    <div class="market-glow market-glow-right"></div>
+
+    <main class="market-shell">
+      <section class="market-hero">
+        <div class="market-copy">
+          <p class="eyebrow">Global Market Board</p>
+          <h1>全球市场版</h1>
+          <p class="market-lead">把全球市场、世界头条和国际食品基准价放在一页里，一眼看清今天外面的风向。</p>
+          <div class="market-links">
+            <a class="market-link market-link-primary" href="./index.html">返回家庭主页</a>
+          </div>
+        </div>
+
+        <section class="market-clock-panel" aria-label="市场时钟">
+          <div class="market-clock-header">
+            <p class="eyebrow">Market Clocks</p>
+            <h2>市场时钟</h2>
+          </div>
+          <div class="clock-grid">
+            <article class="clock-card">
+              <p class="clock-city">上海</p>
+              <strong id="clockShanghai">--:--</strong>
+            </article>
+            <article class="clock-card">
+              <p class="clock-city">伊斯坦布尔</p>
+              <strong id="clockIstanbul">--:--</strong>
+            </article>
+            <article class="clock-card">
+              <p class="clock-city">伦敦</p>
+              <strong id="clockLondon">--:--</strong>
+            </article>
+            <article class="clock-card">
+              <p class="clock-city">纽约</p>
+              <strong id="clockNewYork">--:--</strong>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section class="market-panel crypto-panel" aria-label="加密货币快照">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Crypto Snapshot</p>
+            <h2>加密货币快照</h2>
+          </div>
+          <p id="cryptoStatus" class="panel-note">正在获取实时价格...</p>
+        </div>
+        <div class="crypto-grid">
+          <article class="asset-card">
+            <div class="asset-top">
+              <p class="asset-name">BTC</p>
+              <span id="btcChange" class="delta flat">--</span>
+            </div>
+            <h3 id="btcPrice">--</h3>
+            <p class="asset-copy">比特币现价，按美元显示。</p>
+          </article>
+          <article class="asset-card">
+            <div class="asset-top">
+              <p class="asset-name">ETH</p>
+              <span id="ethChange" class="delta flat">--</span>
+            </div>
+            <h3 id="ethPrice">--</h3>
+            <p class="asset-copy">以太坊现价，按美元显示。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="market-panel news-panel" aria-label="世界头条">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">World Headlines</p>
+            <h2>世界头条</h2>
+          </div>
+          <p id="newsStatus" class="panel-note">正在获取世界新闻...</p>
+        </div>
+        <div id="newsList" class="headline-grid">
+          <article class="headline-card">
+            <p class="headline-source">Loading</p>
+            <p class="headline-title">新闻加载中...</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="market-panel food-panel" aria-label="国际食品价格">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Food Benchmarks</p>
+            <h2>国际食品价格</h2>
+          </div>
+          <p id="foodStatus" class="panel-note">按世界银行 Pink Sheet 的官方月度美元基准价显示。</p>
+        </div>
+        <div id="foodGrid" class="food-grid">
+          <article class="food-card">
+            <p class="food-name">加载中</p>
+            <h3>--</h3>
+          </article>
+        </div>
+        <div class="compare-grid">
+          <article class="compare-card">
+            <p class="compare-label">国际基准价</p>
+            <h3>看全球行情</h3>
+            <p class="compare-copy">适合比较全球价格趋势，口径更统一，全部按美元展示。</p>
+          </article>
+          <article class="compare-card">
+            <p class="compare-label">超市零售价</p>
+            <h3>看本地生活体感</h3>
+            <p class="compare-copy">会受到国家、城市、税费、超市品牌和促销影响，更贴近日常买菜。</p>
+          </article>
+        </div>
+        <p class="food-footnote">
+          <a
+            href="https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Pink-Sheet-March-2026.pdf"
+            target="_blank"
+            rel="noreferrer"
+          >来源：World Bank Pink Sheet（2026年3月3日发布，含2026年2月月度均价）</a>
+        </p>
+      </section>
+    </main>
+
+    <script src="./market.js"></script>
+  </body>
+</html>

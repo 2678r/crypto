@@ -210,6 +210,32 @@ body.birthday-page .hero-copy.birthday-mode h1 {
   line-height: 1.65;
 }
 
+.page-links {
+  margin-top: 14px;
+}
+
+.ghost-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 179, 93, 0.24);
+  background: rgba(255, 248, 224, 0.92);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 800;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    background 180ms ease;
+}
+
+.ghost-link:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
 .today-strip {
   display: inline-grid;
   gap: 6px;
