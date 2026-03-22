@@ -68,6 +68,48 @@
 
       </section>
 
+      <section class="panel message-board" aria-label="家庭留言板">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Message Board</p>
+            <h2>家里留言板</h2>
+          </div>
+          <p class="panel-note">想说的话就留在这里，打开网页就能看到彼此的小提醒。</p>
+        </div>
+
+        <form id="messageForm" class="message-form">
+          <label class="field-card message-field">
+            <span>留言人</span>
+            <input
+              id="messageName"
+              type="text"
+              maxlength="20"
+              placeholder="例如 妈妈 / 帆帆"
+              autocomplete="off"
+            />
+          </label>
+
+          <label class="field-card message-field">
+            <span>想说的话</span>
+            <textarea
+              id="messageText"
+              maxlength="160"
+              rows="3"
+              placeholder="比如：晚上记得吃水果，或者今天谁做饭。"
+            ></textarea>
+          </label>
+
+          <div class="message-actions">
+            <p id="messageStatus" class="message-status">正在尝试连接全家共享留言板...</p>
+            <button class="primary-button" type="submit">发布留言</button>
+          </div>
+        </form>
+
+        <div id="messageList" class="message-list">
+          <p class="loading-row">还没有留言，来写第一条吧。</p>
+        </div>
+      </section>
+
       <section id="blessingWall" class="blessing-wall" aria-label="吉祥祝福墙" hidden>
         <div class="blessing-wall-header">
           <div>
@@ -165,48 +207,6 @@
       </section>
 
       </details>
-
-      <section class="panel message-board" aria-label="家庭留言板">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Message Board</p>
-            <h2>家里留言板</h2>
-          </div>
-          <p class="panel-note">想说的话就留在这里，打开网页就能看到彼此的小提醒。</p>
-        </div>
-
-        <form id="messageForm" class="message-form">
-          <label class="field-card message-field">
-            <span>留言人</span>
-            <input
-              id="messageName"
-              type="text"
-              maxlength="20"
-              placeholder="例如 妈妈 / 帆帆"
-              autocomplete="off"
-            />
-          </label>
-
-          <label class="field-card message-field">
-            <span>想说的话</span>
-            <textarea
-              id="messageText"
-              maxlength="160"
-              rows="3"
-              placeholder="比如：晚上记得吃水果，或者今天谁做饭。"
-            ></textarea>
-          </label>
-
-          <div class="message-actions">
-            <p id="messageStatus" class="message-status">正在尝试连接全家共享留言板...</p>
-            <button class="primary-button" type="submit">发布留言</button>
-          </div>
-        </form>
-
-        <div id="messageList" class="message-list">
-          <p class="loading-row">还没有留言，来写第一条吧。</p>
-        </div>
-      </section>
 
       <details id="turnipExtra" class="home-extra turnip-extra" aria-label="大头菜价格预测" open>
         <summary class="home-extra-summary">
