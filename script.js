@@ -1,5 +1,8 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const MESSAGE_BOARD_KEY = "family-message-board-v1";
+const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_jyQ8EuXV2kRTcRKtauUpIw_0zQEDz2y";
+const SUPABASE_MESSAGE_TABLE = "family_messages";
 const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v2";
 const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v3";
 const BIRTHDAY_PREVIEW_MODE = false;
@@ -107,6 +110,7 @@ const messageNameInput = document.querySelector("#messageName");
 const messageTextInput = document.querySelector("#messageText");
 const messageStatus = document.querySelector("#messageStatus");
 const messageList = document.querySelector("#messageList");
+let messageBoardMode = "shared";
 
 const familyBirthdays = [
   { name: "毛毛", birth: "2014-01-05" },
@@ -333,6 +337,53 @@ function saveMessageEntries(entries) {
   saveJsonCache(MESSAGE_BOARD_KEY, entries.slice(-24));
 }
 
+async function fetchSharedMessages() {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/${SUPABASE_MESSAGE_TABLE}?select=id,name,text,created_at&order=created_at.desc&limit=24`,
+    {
+      headers: {
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`shared-board-fetch-failed:${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data)) return [];
+
+  return data.map((entry) => ({
+    name: entry.name || "家人",
+    text: entry.text || "",
+    createdAt: entry.created_at || new Date().toISOString(),
+  }));
+}
+
+async function createSharedMessage(entry) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_MESSAGE_TABLE}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      name: entry.name,
+      text: entry.text,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`shared-board-post-failed:${response.status}`);
+  }
+
+  return response.json();
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -550,10 +601,14 @@ function formatMessageTime(value) {
   }).format(date);
 }
 
-function renderMessageBoard() {
-  if (!messageList) return;
+function setMessageStatus(text) {
+  if (messageStatus) {
+    messageStatus.textContent = text;
+  }
+}
 
-  const entries = loadMessageEntries();
+function renderMessageBoard(entries = loadMessageEntries()) {
+  if (!messageList) return;
 
   if (!entries.length) {
     messageList.innerHTML = '<p class="loading-row">还没有留言，来写第一条吧。</p>';
@@ -575,7 +630,24 @@ function renderMessageBoard() {
     .join("");
 }
 
-function handleMessageSubmit(event) {
+async function syncMessageBoard() {
+  if (!messageList) return;
+
+  try {
+    const sharedEntries = await fetchSharedMessages();
+    const orderedEntries = sharedEntries.slice().reverse();
+    messageBoardMode = "shared";
+    saveMessageEntries(orderedEntries);
+    renderMessageBoard(orderedEntries);
+    setMessageStatus("全家共享留言板已连接，大家打开网页都能看到这些留言。");
+  } catch {
+    messageBoardMode = "local";
+    renderMessageBoard();
+    setMessageStatus("共享留言板暂时没连上，现在先显示这台设备里的留言。");
+  }
+}
+
+async function handleMessageSubmit(event) {
   event.preventDefault();
   if (!messageNameInput || !messageTextInput || !messageStatus) return;
 
@@ -583,22 +655,44 @@ function handleMessageSubmit(event) {
   const text = messageTextInput.value.trim().slice(0, 160);
 
   if (!name || !text) {
-    messageStatus.textContent = "名字和留言都写一点，发布后才会显示出来。";
+    setMessageStatus("名字和留言都写一点，发布后才会显示出来。");
     return;
   }
 
-  const entries = loadMessageEntries();
-  entries.push({
+  const entry = {
     name,
     text,
     createdAt: new Date().toISOString(),
-  });
-  saveMessageEntries(entries);
-  renderMessageBoard();
+  };
+
+  if (messageBoardMode === "shared") {
+    try {
+      await createSharedMessage(entry);
+      await syncMessageBoard();
+    } catch {
+      const entries = loadMessageEntries();
+      entries.push(entry);
+      saveMessageEntries(entries);
+      renderMessageBoard(entries);
+      messageBoardMode = "local";
+      setMessageStatus("共享发布失败，这条留言先保存在这台设备里了。");
+      messageNameInput.value = name;
+      messageTextInput.value = "";
+      return;
+    }
+  } else {
+    const entries = loadMessageEntries();
+    entries.push(entry);
+    saveMessageEntries(entries);
+    renderMessageBoard(entries);
+    setMessageStatus("留言先保存在这台设备里；等共享表连好后，我们再切回全家共享。");
+  }
 
   messageNameInput.value = name;
   messageTextInput.value = "";
-  messageStatus.textContent = "发布成功，这条留言已经放到留言板上了。";
+  if (messageBoardMode === "shared") {
+    setMessageStatus("发布成功，这条留言全家人现在都能看到了。");
+  }
 }
 
 function getSourceLabel(item) {
@@ -1219,6 +1313,7 @@ createInputs();
 render();
 renderBlessingWall();
 renderMessageBoard();
+syncMessageBoard();
 updateTodayInfo();
 updateBirthdayReminder();
 updateDailyQuote();
