@@ -84,21 +84,6 @@ body {
   font-weight: 800;
 }
 
-.blessing {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(255, 244, 211, 0.92);
-  border: 1px solid rgba(216, 157, 43, 0.24);
-  color: #9a6510;
-  font-size: 0.92rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  box-shadow: 0 10px 30px rgba(216, 157, 43, 0.12);
-}
-
 h1,
 h2,
 h3,
@@ -115,17 +100,19 @@ h3 {
 
 h1 {
   font-size: clamp(2.4rem, 5vw, 4.8rem);
-  line-height: 0.98;
+  line-height: 1.08;
   letter-spacing: 0.01em;
-  max-width: 10ch;
+  max-width: 12ch;
+  color: #7b4b16;
+  text-wrap: balance;
 }
 
 .lead {
   margin-top: 14px;
-  max-width: 44rem;
+  max-width: 30rem;
   color: var(--muted);
-  font-size: 1.04rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 .hero-actions {
@@ -477,12 +464,6 @@ tbody tr:hover {
   h1 {
     font-size: 2.3rem;
     max-width: none;
-  }
-
-  .blessing {
-    font-size: 0.84rem;
-    padding: 7px 12px;
-    margin-bottom: 10px;
   }
 
   .lead,
