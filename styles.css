@@ -133,9 +133,27 @@ h1 {
   line-height: 1.4;
 }
 
+.today-times {
+  display: grid;
+  gap: 6px;
+}
+
+.today-time-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-time-label {
+  color: #7b8857;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .today-time {
   color: #6b5117;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -168,6 +186,31 @@ h1 {
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.45;
+}
+
+.quote-strip {
+  display: inline-grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(245, 251, 239, 0.96);
+  border: 1px solid rgba(117, 181, 90, 0.18);
+  box-shadow: 0 12px 26px rgba(117, 181, 90, 0.08);
+}
+
+.quote-label {
+  color: #62933f;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.daily-quote {
+  max-width: 30rem;
+  color: #58663a;
+  font-size: 0.98rem;
+  line-height: 1.6;
 }
 
 .fortune-wrapper {
@@ -849,6 +892,10 @@ tbody tr:hover {
     width: fit-content;
   }
 
+  .quote-strip {
+    width: fit-content;
+  }
+
   .news-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -903,8 +950,14 @@ tbody tr:hover {
     border-radius: 16px;
   }
 
+  .quote-strip {
+    width: 100%;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
   .today-time {
-    font-size: 1.2rem;
+    font-size: 1.02rem;
   }
 
   .news-strip {

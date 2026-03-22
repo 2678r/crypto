@@ -1,4 +1,6 @@
 const STORAGE_KEY = "turnip-tracker-week";
+const BIRTHDAY_CACHE_KEY = "family-lunar-birthday-cache-v1";
+const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v1";
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
 const NEWS_API_URL =
@@ -76,10 +78,12 @@ const newsStatus = document.querySelector("#newsStatus");
 const newsList = document.querySelector("#newsList");
 const placesStatus = document.querySelector("#placesStatus");
 const todayDate = document.querySelector("#todayDate");
-const todayTime = document.querySelector("#todayTime");
+const turkeyTime = document.querySelector("#turkeyTime");
+const chinaTime = document.querySelector("#chinaTime");
 const todayLunar = document.querySelector("#todayLunar");
 const birthdayName = document.querySelector("#birthdayName");
 const birthdayMeta = document.querySelector("#birthdayMeta");
+const dailyQuote = document.querySelector("#dailyQuote");
 
 const familyBirthdays = [
   { name: "毛毛", birth: "2014-01-05" },
@@ -133,6 +137,21 @@ const fallbackPlaces = {
     { day: "后天", weather: "晴朗", temp: "23C / 14C" },
   ],
 };
+
+const dailyQuotes = [
+  "今天慢一点，也没有关系。",
+  "家人安好，就是最好的财富。",
+  "小小努力，也会慢慢开花。",
+  "平安顺遂，本身就是好日子。",
+  "把今天过好，明天自然会来。",
+  "心里有光，日子就会亮一点。",
+  "慢慢来，生活自有答案。",
+  "愿今天的你，也被温柔对待。",
+  "好运常来，烦恼慢慢走开。",
+  "一家人平平安安，就是最大的福气。",
+  "好心情，会带来好消息。",
+  "认真生活的人，运气都不会太差。",
+];
 
 let state = loadState();
 
@@ -419,6 +438,23 @@ function getLunarMonthDay(date) {
   };
 }
 
+function loadJsonCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveJsonCache(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore cache write issues and keep the page working.
+  }
+}
+
 function parseBirthDate(value) {
   const digits = value.replaceAll("-", "");
   if (digits.length !== 8) return null;
@@ -454,23 +490,67 @@ function findNextLunarBirthday(targetMonth, targetDay, fromDate) {
   return null;
 }
 
+function getLunarBirthdays() {
+  const cache = loadJsonCache(BIRTHDAY_CACHE_KEY);
+  const cacheMap = cache?.entries || {};
+  let changed = false;
+
+  const result = familyBirthdays.map((person) => {
+    const cached = cacheMap[person.birth];
+    if (cached?.month && cached?.day) {
+      return { ...person, lunarBirth: cached };
+    }
+
+    const birthDate = parseBirthDate(person.birth);
+    if (!birthDate) return null;
+
+    const lunarBirth = getLunarMonthDay(birthDate);
+    cacheMap[person.birth] = lunarBirth;
+    changed = true;
+    return { ...person, lunarBirth };
+  }).filter(Boolean);
+
+  if (changed || !cache) {
+    saveJsonCache(BIRTHDAY_CACHE_KEY, { entries: cacheMap });
+  }
+
+  return result;
+}
+
+function getTodayCacheKey(date) {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
 function updateBirthdayReminder() {
   if (!birthdayName || !birthdayMeta) return;
 
   const today = new Date();
-  const candidates = familyBirthdays
-    .map((person) => {
-      const birthDate = parseBirthDate(person.birth);
-      if (!birthDate) return null;
+  const todayKey = getTodayCacheKey(today);
+  const upcomingCache = loadJsonCache(BIRTHDAY_TODAY_CACHE_KEY);
 
-      const lunarBirth = getLunarMonthDay(birthDate);
-      const nextBirthday = findNextLunarBirthday(lunarBirth.month, lunarBirth.day, today);
+  if (upcomingCache?.todayKey === todayKey && upcomingCache.upcoming) {
+    const upcoming = upcomingCache.upcoming;
+    birthdayName.textContent = `${upcoming.name} 快过生日啦`;
+    birthdayMeta.textContent =
+      upcoming.daysLeft === 0
+        ? `今天是农历${upcoming.lunarLabel}，正好生日。`
+        : `农历${upcoming.lunarLabel}，还有 ${upcoming.daysLeft} 天。`;
+    return;
+  }
+
+  const candidates = getLunarBirthdays()
+    .map((person) => {
+      const nextBirthday = findNextLunarBirthday(
+        person.lunarBirth.month,
+        person.lunarBirth.day,
+        today,
+      );
       if (!nextBirthday) return null;
 
       return {
         ...person,
-        lunarLabel: `${lunarBirth.month}${lunarBirth.day}`,
-        nextBirthday,
+        lunarLabel: `${person.lunarBirth.month}${person.lunarBirth.day}`,
+        nextBirthday: nextBirthday.toISOString(),
         daysLeft: diffDays(today, nextBirthday),
       };
     })
@@ -485,6 +565,15 @@ function updateBirthdayReminder() {
     return;
   }
 
+  saveJsonCache(BIRTHDAY_TODAY_CACHE_KEY, {
+    todayKey,
+    upcoming: {
+      name: upcoming.name,
+      lunarLabel: upcoming.lunarLabel,
+      daysLeft: upcoming.daysLeft,
+    },
+  });
+
   birthdayName.textContent = `${upcoming.name} 快过生日啦`;
 
   if (upcoming.daysLeft === 0) {
@@ -494,6 +583,16 @@ function updateBirthdayReminder() {
 
   birthdayMeta.textContent =
     `农历${upcoming.lunarLabel}，还有 ${upcoming.daysLeft} 天。`;
+}
+
+function updateDailyQuote() {
+  if (!dailyQuote) return;
+
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const dayIndex = Math.floor((now - startOfYear) / 86400000);
+  const quote = dailyQuotes[dayIndex % dailyQuotes.length];
+  dailyQuote.textContent = quote;
 }
 
 function updateTodayInfo() {
@@ -508,12 +607,23 @@ function updateTodayInfo() {
     }).format(now);
   }
 
-  if (todayTime) {
-    todayTime.textContent = new Intl.DateTimeFormat("zh-CN", {
+  if (turkeyTime) {
+    turkeyTime.textContent = new Intl.DateTimeFormat("zh-CN", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
       hour12: false,
+      timeZone: "Europe/Istanbul",
+    }).format(now);
+  }
+
+  if (chinaTime) {
+    chinaTime.textContent = new Intl.DateTimeFormat("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Shanghai",
     }).format(now);
   }
 
@@ -777,12 +887,14 @@ createInputs();
 render();
 updateTodayInfo();
 updateBirthdayReminder();
+updateDailyQuote();
 updatePlaceTime();
 loadCryptoPrices();
 loadNewsHeadlines();
 loadPlacesWeather();
 window.setInterval(updateTodayInfo, 1000);
 window.setInterval(updateBirthdayReminder, 60 * 60_000);
+window.setInterval(updateDailyQuote, 60 * 60_000);
 window.setInterval(updatePlaceTime, 30_000);
 window.setInterval(loadCryptoPrices, 60_000);
 window.setInterval(loadNewsHeadlines, 10 * 60_000);

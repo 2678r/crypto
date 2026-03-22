@@ -26,13 +26,26 @@
           </p>
           <div class="today-strip" aria-label="当天时间和农历">
             <p id="todayDate" class="today-date">--</p>
-            <p id="todayTime" class="today-time">--:--:--</p>
+            <div class="today-times">
+              <p class="today-time-row">
+                <span class="today-time-label">土耳其时间</span>
+                <span id="turkeyTime" class="today-time">--:--:--</span>
+              </p>
+              <p class="today-time-row">
+                <span class="today-time-label">中国时间</span>
+                <span id="chinaTime" class="today-time">--:--:--</span>
+              </p>
+            </div>
             <p id="todayLunar" class="today-lunar">农历加载中...</p>
           </div>
           <div class="birthday-strip" aria-label="最近农历生日提醒">
             <p class="birthday-label">最近农历生日</p>
             <p id="birthdayName" class="birthday-name">计算中...</p>
             <p id="birthdayMeta" class="birthday-meta">正在查找最近的生日提醒...</p>
+          </div>
+          <div class="quote-strip" aria-label="今日一句">
+            <p class="quote-label">今日一句</p>
+            <p id="dailyQuote" class="daily-quote">正在准备今天的小提醒...</p>
           </div>
         </div>
 
