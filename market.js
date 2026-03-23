@@ -51,11 +51,27 @@ const fallbackHeadlines = [
   },
 ];
 
+const economicData = {
+  turkey: {
+    gdp: "1.15 万亿美元",
+    growth: "3.5%",
+    population: "8600 万",
+    perCapita: "13,372 美元",
+  },
+  china: {
+    gdp: "17.9 万亿美元",
+    growth: "5.2%",
+    population: "14.2 亿",
+    perCapita: "12,556 美元",
+  },
+};
+
 const cryptoStatus = document.querySelector("#cryptoStatus");
 const newsStatus = document.querySelector("#newsStatus");
 const newsList = document.querySelector("#newsList");
 const foodStatus = document.querySelector("#foodStatus");
 const foodGrid = document.querySelector("#foodGrid");
+const economyStatus = document.querySelector("#economyStatus");
 
 function escapeHtml(value) {
   return String(value)
@@ -355,8 +371,21 @@ function updateClocks() {
   updateClock("#clockNewYork", "America/New_York");
 }
 
+function loadEconomyData() {
+  document.querySelector("#turkeyGdp").textContent = economicData.turkey.gdp;
+  document.querySelector("#turkeyGrowth").textContent = economicData.turkey.growth;
+  document.querySelector("#turkeyPopulation").textContent = economicData.turkey.population;
+  document.querySelector("#turkeyPerCapita").textContent = economicData.turkey.perCapita;
+  
+  document.querySelector("#chinaGdp").textContent = economicData.china.gdp;
+  document.querySelector("#chinaGrowth").textContent = economicData.china.growth;
+  document.querySelector("#chinaPopulation").textContent = economicData.china.population;
+  document.querySelector("#chinaPerCapita").textContent = economicData.china.perCapita;
+}
+
 renderFoodBoard();
 updateClocks();
+loadEconomyData();
 loadCryptoPrices();
 loadNewsHeadlines();
 
