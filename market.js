@@ -184,12 +184,35 @@ function saveCryptoCache(payload) {
 function normalizeFuelPayload(payload, country) {
   if (!payload?.success || !Array.isArray(payload?.result)) return null;
   const items = payload.result;
-  const countryData = items.find(item => item.country?.toLowerCase() === country.toLowerCase());
-  if (!countryData) return null;
-  return {
-    gasoline: Number(countryData.gasoline),
-    diesel: Number(countryData.diesel),
-  };
+  if (country.toLowerCase() === "turkey") {
+    if (items.length === 0) return null;
+    let totalGasoline = 0;
+    let totalDiesel = 0;
+    let count = 0;
+    for (const item of items) {
+      const gas = Number(item.katkili);
+      const die = Number(item.motorin);
+      if (Number.isFinite(gas) && Number.isFinite(die)) {
+        totalGasoline += gas;
+        totalDiesel += die;
+        count++;
+      }
+    }
+    if (count === 0) return null;
+    return {
+      gasoline: totalGasoline / count,
+      diesel: totalDiesel / count,
+    };
+  } else if (country.toLowerCase() === "china") {
+    // Assuming similar structure or adjust based on actual response
+    const countryData = items.find(item => item.country?.toLowerCase() === country.toLowerCase());
+    if (!countryData) return null;
+    return {
+      gasoline: Number(countryData.gasoline),
+      diesel: Number(countryData.diesel),
+    };
+  }
+  return null;
 }
 
 function loadFuelCache() {
