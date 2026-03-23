@@ -31,20 +31,17 @@
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow">自家专用小站</p>
-          <div id="birthdayHeroBanner" class="birthday-hero-banner" hidden>
-            <span class="hero-rocket hero-rocket-left">🚀</span>
-            <span class="hero-rocket hero-rocket-mid">🚀</span>
-            <p id="birthdayHeroText" class="birthday-hero-text">快有人过生日啦</p>
-            <span class="hero-rocket hero-rocket-mid">🚀</span>
-            <span class="hero-rocket hero-rocket-right">🚀</span>
-          </div>
-          <h1 id="mainHeadline">祝 YIYA YIFAN 发大财<br />大头菜大赢家</h1>
+          <h1 id="mainHeadline" class="typing-headline">正在准备今天的滋养小话...</h1>
           <p class="lead">
             家里的留言、时间、天气和小提醒放在一起，打开就能看见。
           </p>
           <div class="page-links">
             <a class="ghost-link" href="./turnip.html">打开大头菜计算器</a>
             <a class="ghost-link" href="./market.html">打开全球市场版</a>
+          </div>
+          <div id="festivalStrip" class="festival-strip" aria-label="节日模式提示" hidden>
+            <p id="festivalLabel" class="festival-label">节日模式</p>
+            <p id="festivalText" class="festival-text">正在准备节日祝福...</p>
           </div>
           <div class="today-strip" aria-label="当天时间和农历">
             <p id="todayDate" class="today-date">--</p>
@@ -64,10 +61,6 @@
             <p class="birthday-label">最近农历生日</p>
             <p id="birthdayName" class="birthday-name">计算中...</p>
             <p id="birthdayMeta" class="birthday-meta">正在查找最近的生日提醒...</p>
-          </div>
-          <div class="quote-strip" aria-label="今日一句">
-            <p class="quote-label">今日一句</p>
-            <p id="dailyQuote" class="daily-quote">正在准备今天的小提醒...</p>
           </div>
         </div>
 
@@ -140,22 +133,6 @@
           <span class="home-extra-tip">点击展开</span>
         </summary>
 
-      <section class="news-strip" aria-label="世界新闻头条">
-        <div class="news-strip-header">
-          <div>
-            <p class="eyebrow">世界新闻头条</p>
-            <h2>今天也看看外面的世界</h2>
-          </div>
-          <p id="newsStatus" class="panel-note">正在获取头条新闻...</p>
-        </div>
-        <div id="newsList" class="news-list">
-          <article class="news-item">
-            <p class="news-source">Loading</p>
-            <p class="news-title">新闻加载中...</p>
-          </article>
-        </div>
-      </section>
-
       <section class="places-strip" aria-label="家庭城市天气和时间">
         <div class="places-strip-header">
           <div>
@@ -188,6 +165,22 @@
             <div id="yanchengForecast" class="place-forecast">
               <p class="place-weather">天气加载中...</p>
             </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="news-strip" aria-label="世界新闻头条">
+        <div class="news-strip-header">
+          <div>
+            <p class="eyebrow">世界新闻头条</p>
+            <h2>今天也看看外面的世界</h2>
+          </div>
+          <p id="newsStatus" class="panel-note">正在获取头条新闻...</p>
+        </div>
+        <div id="newsList" class="news-list">
+          <article class="news-item">
+            <p class="news-source">Loading</p>
+            <p class="news-title">新闻加载中...</p>
           </article>
         </div>
       </section>

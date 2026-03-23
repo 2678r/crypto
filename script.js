@@ -1,9 +1,12 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const MESSAGE_BOARD_KEY = "family-message-board-v1";
 const MESSAGE_HIDDEN_KEY = "family-message-hidden-v1";
+const MESSAGE_LIKES_KEY = "family-message-likes-v1";
 const MESSAGE_PAYLOAD_PREFIX = "__FMB1__";
 const MESSAGE_DEFAULT_VISIBLE_COUNT = 5;
 const CRYPTO_CACHE_KEY = "family-crypto-cache-v1";
+const TURNIP_HISTORY_KEY = "turnip-tracker-history-v1";
+const TURNIP_HISTORY_LIMIT = 12;
 const DEFAULT_USD_TO_CNY_RATE = 6.87365;
 const FX_API_URL = "https://api.frankfurter.app/latest?from=USD&to=CNY";
 const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
@@ -55,6 +58,35 @@ const WEATHER_LOCATIONS = [
     longitude: 120.1573,
   },
 ];
+
+const FESTIVAL_LOOKUP = {
+  spring: {
+    name: "春节",
+    label: "新春模式",
+    lunarMonth: "正月",
+    lunarDay: "1",
+    preheatDays: 5,
+    headlines: [
+      "新春将至，愿你平安喜乐，万事胜意。",
+      "灯火可亲，团圆可期，愿这一年顺顺当当。",
+      "把旧年的疲惫放下，把新年的福气接住。",
+      "愿新一年家人常伴，日子常暖，心里常安。",
+    ],
+  },
+  midautumn: {
+    name: "中秋",
+    label: "中秋模式",
+    lunarMonth: "八月",
+    lunarDay: "15",
+    preheatDays: 4,
+    headlines: [
+      "月亮慢慢圆，愿家人也慢慢团圆。",
+      "人间好时节，最适合把思念和温柔都说出来。",
+      "愿你抬头见明月，低头有牵挂，身边有团圆。",
+      "把心事放进月光里，今夜就让温柔多一点。",
+    ],
+  },
+};
 
 const slots = [
   { id: "mon_am", label: "周一 AM", hint: "上午价格" },
@@ -113,12 +145,12 @@ const todayDate = document.querySelector("#todayDate");
 const turkeyTime = document.querySelector("#turkeyTime");
 const chinaTime = document.querySelector("#chinaTime");
 const todayLunar = document.querySelector("#todayLunar");
+const festivalStrip = document.querySelector("#festivalStrip");
+const festivalLabel = document.querySelector("#festivalLabel");
+const festivalText = document.querySelector("#festivalText");
 const birthdayName = document.querySelector("#birthdayName");
 const birthdayMeta = document.querySelector("#birthdayMeta");
-const dailyQuote = document.querySelector("#dailyQuote");
 const mainHeadline = document.querySelector("#mainHeadline");
-const birthdayHeroBanner = document.querySelector("#birthdayHeroBanner");
-const birthdayHeroText = document.querySelector("#birthdayHeroText");
 const heroCopy = document.querySelector(".hero-copy");
 const blessingWall = document.querySelector("#blessingWall");
 const familyExtra = document.querySelector("#familyExtra");
@@ -133,9 +165,16 @@ const foodStatus = document.querySelector("#foodStatus");
 const foodGrid = document.querySelector("#foodGrid");
 const marketSnapshotGrid = document.querySelector("#marketSnapshotGrid");
 const fxSnapshotGrid = document.querySelector("#fxSnapshotGrid");
+const profitEstimateCard = document.querySelector("#profitEstimateCard");
+const profitEstimateDetail = document.querySelector("#profitEstimateDetail");
+const turnipChart = document.querySelector("#turnipChart");
+const turnipHistoryList = document.querySelector("#turnipHistoryList");
 let messageBoardMode = "shared";
 let activeReply = null;
 let usdToCnyRate = DEFAULT_USD_TO_CNY_RATE;
+let headlineTypingTimeout = null;
+let headlineTypingPauseTimeout = null;
+let activeSeasonalTheme = null;
 let exchangeRates = {
   USD: 1,
   CNY: DEFAULT_USD_TO_CNY_RATE,
@@ -229,7 +268,7 @@ const familyBirthdays = [
   { name: "鬼鬼", birth: "2018-08-03" },
   { name: "奶奶", birth: "1953-12-10" },
   { name: "爷爷", birth: "1954-06-06", lunarOverride: { month: "五月", day: "16" } },
-  { name: "爸爸", birth: "1981-06-07" },
+  { name: "大大", birth: "1981-06-07" },
   { name: "姐姐", birth: "2008-07-08" },
   { name: "帆帆", birth: "2010-01-10" },
   { name: "沈园长", birth: "1987-03-04" },
@@ -290,6 +329,19 @@ const dailyQuotes = [
   "一家人平平安安，就是最大的福气。",
   "好心情，会带来好消息。",
   "认真生活的人，运气都不会太差。",
+];
+
+const nourishingHeadlines = [
+  "慢一点也没关系，平安顺遂就是好日子。",
+  "把心放松一点，好运和福气都会慢慢靠近。",
+  "今天先照顾好自己，生活自然会温柔一点。",
+  "一家人平平安安，就是最稳的幸福。",
+  "把日子过暖一点，心里就会亮一点。",
+  "愿你今天心有安定，脚下有力量。",
+  "先把自己哄开心，好事才更容易发生。",
+  "轻轻松松过一天，也是很了不起的本事。",
+  "你被爱着，也值得被世界温柔对待。",
+  "今天不用太完美，舒服开心就很好。",
 ];
 
 const blessingKeywords = [
@@ -505,6 +557,85 @@ async function createSharedMessage(entry) {
 function saveState() {
   state.lastUpdated = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  saveTurnipHistorySnapshot();
+}
+
+function getTurnipWeekKey(date = new Date()) {
+  const chinaToday = getChinaTodayDate(date);
+  const start = new Date(chinaToday);
+  start.setUTCDate(chinaToday.getUTCDate() - chinaToday.getUTCDay());
+  return start.toISOString().slice(0, 10);
+}
+
+function loadTurnipHistory() {
+  const raw = loadJsonCache(TURNIP_HISTORY_KEY);
+  return Array.isArray(raw) ? raw : [];
+}
+
+function saveTurnipHistorySnapshot() {
+  const buyPrice = toNumber(state.buyPrice);
+  const entries = getRecordedEntries();
+  if (!buyPrice && !entries.length) return;
+
+  const highest = entries.length ? Math.max(...entries.map((entry) => entry.value)) : null;
+  const latest = entries.length ? entries[entries.length - 1].value : null;
+  const bestProfit = buyPrice && highest !== null ? (highest - buyPrice) * 100 : null;
+  const weekKey = getTurnipWeekKey();
+  const history = loadTurnipHistory().filter((item) => item.weekKey !== weekKey);
+
+  history.unshift({
+    weekKey,
+    updatedAt: new Date().toISOString(),
+    buyPrice,
+    highest,
+    latest,
+    entriesCount: entries.length,
+    bestProfit,
+  });
+
+  saveJsonCache(TURNIP_HISTORY_KEY, history.slice(0, TURNIP_HISTORY_LIMIT));
+}
+
+function loadMessageLikes() {
+  const raw = loadJsonCache(MESSAGE_LIKES_KEY);
+  return {
+    likedKeys: Array.isArray(raw?.likedKeys) ? raw.likedKeys : [],
+    counts: raw?.counts && typeof raw.counts === "object" ? raw.counts : {},
+  };
+}
+
+function getMessageLikeState(entry) {
+  const key = getMessageFingerprint(entry);
+  const likes = loadMessageLikes();
+  return {
+    key,
+    liked: likes.likedKeys.includes(key),
+    count: Number(likes.counts[key]) || 0,
+  };
+}
+
+function toggleMessageLike(entry) {
+  const key = getMessageFingerprint(entry);
+  if (!key) return;
+
+  const likes = loadMessageLikes();
+  const likedKeys = new Set(likes.likedKeys);
+  const counts = { ...likes.counts };
+  const alreadyLiked = likedKeys.has(key);
+  const currentCount = Number(counts[key]) || 0;
+
+  if (alreadyLiked) {
+    likedKeys.delete(key);
+    counts[key] = Math.max(0, currentCount - 1);
+  } else {
+    likedKeys.add(key);
+    counts[key] = currentCount + 1;
+  }
+
+  saveJsonCache(MESSAGE_LIKES_KEY, {
+    likedKeys: [...likedKeys],
+    counts,
+  });
 }
 
 function toNumber(value) {
@@ -597,6 +728,7 @@ function summarizePattern(buyPrice, entries) {
   if (!buyPrice || entries.length === 0) {
     return {
       pattern: "等待录入",
+      confidence: "数据不足",
       detail: "先输入买入价和几个时段价格，系统会开始缩小范围。",
       peakRange: "--",
       peakWindow: "还无法判断峰值时段。",
@@ -620,6 +752,7 @@ function summarizePattern(buyPrice, entries) {
   if (bigSpike) {
     return {
       pattern: "暴涨型候选",
+      confidence: entries.length >= 6 ? "高把握" : "中等把握",
       detail: "已经出现远高于买入价的大峰值，这周更像典型的大波峰走势。",
       peakRange: `${Math.round(highest)} - ${Math.round(highest * 1.12)} 铃钱`,
       peakWindow: latest.index < 7 ? "高点可能已出现，后段要警惕快速回落。" : "高点大概率已经兑现，建议优先落袋为安。",
@@ -633,6 +766,7 @@ function summarizePattern(buyPrice, entries) {
   if (earlyDrop && risingSteps >= 2 && aboveBuyCount >= 1) {
     return {
       pattern: "波动型候选",
+      confidence: entries.length >= 5 ? "中高把握" : "中等把握",
       detail: "前半周先压价，后面开始抬升，像中后段冲高的波动走势。",
       peakRange: `${Math.round(buyPrice * 1.45)} - ${Math.round(buyPrice * 1.9)} 铃钱`,
       peakWindow: latest.index <= 6 ? "重点盯周三 PM 到周五 AM，容易出现好价格。" : "如果目前还在抬升，接下来 1 到 2 个时段值得守一下。",
@@ -646,6 +780,7 @@ function summarizePattern(buyPrice, entries) {
   if (fallingSteps >= Math.max(3, entries.length - 2) && highest <= buyPrice * 1.1) {
     return {
       pattern: "递减型候选",
+      confidence: entries.length >= 5 ? "高把握" : "中等把握",
       detail: "整体持续走低，暂时看不到强反弹，像一周慢慢烂掉的走势。",
       peakRange: `${Math.round(buyPrice * 0.65)} - ${Math.round(buyPrice * 1.05)} 铃钱`,
       peakWindow: "后续通常不会很惊艳，若出现接近买入价的反弹就值得重视。",
@@ -658,6 +793,7 @@ function summarizePattern(buyPrice, entries) {
 
   return {
     pattern: "小波型候选",
+    confidence: entries.length >= 4 ? "中等把握" : "初步判断",
     detail: "目前像温和起伏的一周，可能会有一次中等强度上涨，但未必特别夸张。",
     peakRange: `${Math.round(buyPrice * 1.15)} - ${Math.round(buyPrice * 1.45)} 铃钱`,
     peakWindow: latest.index <= 8 ? "高点更可能落在周四到周五之间。" : "剩余时段不多，有利润就可以更主动一点。",
@@ -724,6 +860,9 @@ function render() {
   const entries = getRecordedEntries();
   const summary = summarizePattern(buyPrice, entries);
   const highest = entries.length ? Math.max(...entries.map((entry) => entry.value)) : null;
+  const latest = entries.length ? entries[entries.length - 1].value : null;
+  const bestProfit = buyPrice && highest !== null ? (highest - buyPrice) * 100 : null;
+  const latestProfit = buyPrice && latest !== null ? (latest - buyPrice) * 100 : null;
 
   buyPriceInput.value = state.buyPrice;
   if (quickEntryInput) {
@@ -759,8 +898,106 @@ function render() {
   if (peakWindow) peakWindow.textContent = summary.peakWindow;
   if (nextAdvice) nextAdvice.textContent = summary.advice;
   if (nextAdviceCopy) nextAdviceCopy.textContent = summary.adviceCopy;
+  if (profitEstimateCard) {
+    profitEstimateCard.textContent =
+      bestProfit === null
+        ? "-- 铃钱"
+        : `${bestProfit >= 0 ? "+" : ""}${bestProfit} 铃钱`;
+  }
+  if (profitEstimateDetail) {
+    profitEstimateDetail.textContent =
+      bestProfit === null
+        ? "录入价格后，会按最高录入价估算这一周的潜在收益。"
+        : `按每 100 株估算，当前最佳卖点可得 ${bestProfit >= 0 ? "+" : ""}${bestProfit}；最新录入时段约为 ${latestProfit >= 0 ? "+" : ""}${latestProfit}。`;
+  }
 
   renderTable(buyPrice);
+  renderTurnipChart(buyPrice, entries, summary);
+  renderTurnipHistory();
+}
+
+function renderTurnipChart(buyPrice, entries, summary) {
+  if (!turnipChart) return;
+
+  if (!buyPrice || !entries.length) {
+    turnipChart.innerHTML = '<p class="loading-row">录入价格后，这里会显示本周走势图。</p>';
+    return;
+  }
+
+  const width = 760;
+  const height = 280;
+  const paddingX = 36;
+  const paddingY = 26;
+  const values = [buyPrice, ...entries.map((entry) => entry.value)];
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const step = (width - paddingX * 2) / Math.max(1, entries.length - 1);
+  const points = entries
+    .map((entry, index) => {
+      const x = paddingX + step * index;
+      const y = height - paddingY - ((entry.value - min) / range) * (height - paddingY * 2);
+      return { ...entry, x, y };
+    });
+  const polyline = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  const buyY = height - paddingY - ((buyPrice - min) / range) * (height - paddingY * 2);
+
+  turnipChart.innerHTML = `
+    <div class="turnip-chart-summary">
+      <div class="turnip-chart-pill">
+        <span>走势</span>
+        <strong>${escapeHtml(summary.pattern)}</strong>
+      </div>
+      <div class="turnip-chart-pill">
+        <span>判断把握</span>
+        <strong>${escapeHtml(summary.confidence)}</strong>
+      </div>
+      <div class="turnip-chart-pill">
+        <span>参考峰值</span>
+        <strong>${escapeHtml(summary.peakRange)}</strong>
+      </div>
+    </div>
+    <svg class="turnip-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="本周价格图">
+      <line class="turnip-buy-line" x1="${paddingX}" x2="${width - paddingX}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}"></line>
+      ${points
+        .map((point) => `
+          <line class="turnip-guide-line" x1="${point.x.toFixed(1)}" x2="${point.x.toFixed(1)}" y1="${paddingY}" y2="${height - paddingY}"></line>
+        `)
+        .join("")}
+      <polyline class="turnip-chart-line" points="${polyline}"></polyline>
+      ${points
+        .map((point) => `
+          <circle class="turnip-chart-point" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5"></circle>
+          <text class="turnip-chart-value" x="${point.x.toFixed(1)}" y="${(point.y - 12).toFixed(1)}">${point.value}</text>
+          <text class="turnip-chart-slot" x="${point.x.toFixed(1)}" y="${height - 8}">${escapeHtml(point.label.replace(" ", ""))}</text>
+        `)
+        .join("")}
+    </svg>
+  `;
+}
+
+function renderTurnipHistory() {
+  if (!turnipHistoryList) return;
+
+  const history = loadTurnipHistory();
+  if (!history.length) {
+    turnipHistoryList.innerHTML = '<p class="loading-row">还没有历史记录，本周录入后会自动保存。</p>';
+    return;
+  }
+
+  turnipHistoryList.innerHTML = history
+    .slice(0, 6)
+    .map((item) => `
+      <article class="turnip-history-item">
+        <div class="turnip-history-top">
+          <strong>${escapeHtml(item.weekKey)}</strong>
+          <span>${item.entriesCount} 个时段</span>
+        </div>
+        <p class="turnip-history-copy">买入 ${item.buyPrice ?? "--"} / 最高 ${item.highest ?? "--"} / 最新 ${item.latest ?? "--"}</p>
+        <p class="turnip-history-profit">${item.bestProfit === null ? "--" : `${item.bestProfit >= 0 ? "+" : ""}${item.bestProfit} 铃钱 / 百株`}</p>
+      </article>
+    `)
+    .join("");
 }
 
 function escapeHtml(value) {
@@ -855,6 +1092,22 @@ function setActiveReply(entry) {
 
 function wireReplyActions(entries) {
   if (!messageList) return;
+
+  messageList.querySelectorAll("[data-message-like]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const entry = entries.find(
+        (candidate) =>
+          candidate.name === button.dataset.messageLikeName &&
+          candidate.text === button.dataset.messageLikeText &&
+          candidate.createdAt === button.dataset.messageLikeCreatedAt,
+      );
+      if (!entry) return;
+      toggleMessageLike(entry);
+      renderMessageBoard(entries);
+      const { liked, count } = getMessageLikeState(entry);
+      setMessageStatus(liked ? `已点赞，当前这台设备显示 ${count} 个赞。` : "已取消点赞。");
+    });
+  });
 
   messageList.querySelectorAll("[data-reply-name]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1031,7 +1284,9 @@ function renderMessageBoard(entries = loadMessageEntries()) {
   const visibleThreadedEntries = threadedEntries.slice(0, MESSAGE_DEFAULT_VISIBLE_COUNT);
 
   messageList.innerHTML = visibleThreadedEntries
-    .map((entry) => `
+    .map((entry) => {
+      const likeState = getMessageLikeState(entry);
+      return `
       <article class="message-card">
         <div class="message-card-top">
           <div class="message-card-meta">
@@ -1039,6 +1294,14 @@ function renderMessageBoard(entries = loadMessageEntries()) {
             <time class="message-time">${escapeHtml(formatMessageTime(entry.createdAt))}</time>
           </div>
           <div class="message-card-actions">
+            <button
+              class="message-like-button${likeState.liked ? " is-liked" : ""}"
+              type="button"
+              data-message-like
+              data-message-like-name="${escapeHtml(entry.name)}"
+              data-message-like-text="${escapeHtml(entry.text)}"
+              data-message-like-created-at="${escapeHtml(entry.createdAt)}"
+            >点赞 ${likeState.count}</button>
             <button
               class="message-reply-button"
               type="button"
@@ -1088,8 +1351,9 @@ function renderMessageBoard(entries = loadMessageEntries()) {
         ${entry.replies.length ? `
           <div class="message-replies">
             ${entry.replies
-              .map(
-                (reply) => `
+              .map((reply) => {
+                const replyLikeState = getMessageLikeState(reply);
+                return `
                   <article class="message-reply-item">
                     <div class="message-reply-item-top">
                       <div class="message-card-meta">
@@ -1097,6 +1361,14 @@ function renderMessageBoard(entries = loadMessageEntries()) {
                         <time class="message-time">${escapeHtml(formatMessageTime(reply.createdAt))}</time>
                       </div>
                       <div class="message-card-actions">
+                        <button
+                          class="message-like-button${replyLikeState.liked ? " is-liked" : ""}"
+                          type="button"
+                          data-message-like
+                          data-message-like-name="${escapeHtml(reply.name)}"
+                          data-message-like-text="${escapeHtml(reply.text)}"
+                          data-message-like-created-at="${escapeHtml(reply.createdAt)}"
+                        >点赞 ${replyLikeState.count}</button>
                         <button
                           class="message-reply-button"
                           type="button"
@@ -1144,13 +1416,14 @@ function renderMessageBoard(entries = loadMessageEntries()) {
                         : ""
                     }
                   </article>
-                `,
-              )
+                `;
+              })
               .join("")}
           </div>
         ` : ""}
       </article>
-    `)
+    `;
+    })
     .join("");
 
   wireReplyActions(entries);
@@ -1568,6 +1841,92 @@ function getChinaTodayDate(date = new Date()) {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function normalizeBirthdayName(name) {
+  if (name === "爸爸") return "大大";
+  return name;
+}
+
+function findNextLunarFestival(month, day, fromDate) {
+  const nextDate = findNextLunarBirthday(month, day, fromDate);
+  return nextDate ? diffDays(fromDate, nextDate) : Number.POSITIVE_INFINITY;
+}
+
+function clearFestivalThemeClasses() {
+  document.body.classList.remove(
+    "festival-spring-page",
+    "festival-midautumn-page",
+    "festival-preheat-page",
+  );
+}
+
+function applySeasonalTheme(birthdayUpcoming) {
+  clearFestivalThemeClasses();
+  activeSeasonalTheme = null;
+
+  if (festivalStrip) {
+    festivalStrip.hidden = true;
+  }
+
+  const today = getChinaTodayDate(new Date());
+  const seasonalCandidates = Object.entries(FESTIVAL_LOOKUP)
+    .map(([key, festival]) => ({
+      key,
+      ...festival,
+      daysLeft: findNextLunarFestival(festival.lunarMonth, festival.lunarDay, today),
+    }))
+    .filter((item) => Number.isFinite(item.daysLeft))
+    .sort((left, right) => left.daysLeft - right.daysLeft);
+
+  const seasonal = seasonalCandidates[0];
+  const birthdayPreheat =
+    birthdayUpcoming && birthdayUpcoming.daysLeft > 0 && birthdayUpcoming.daysLeft <= 3
+      ? birthdayUpcoming
+      : null;
+
+  if (birthdayUpcoming?.daysLeft === 0) {
+    if (festivalStrip && festivalLabel && festivalText) {
+      festivalStrip.hidden = false;
+      festivalLabel.textContent = "生日模式";
+      festivalText.textContent = `今天给 ${birthdayUpcoming.name} 过生日啦，主页已经切成专属庆生样式。`;
+    }
+    return;
+  }
+
+  if (seasonal && seasonal.daysLeft === 0) {
+    activeSeasonalTheme = seasonal;
+    document.body.classList.add(
+      seasonal.key === "spring" ? "festival-spring-page" : "festival-midautumn-page",
+    );
+    if (festivalStrip && festivalLabel && festivalText) {
+      festivalStrip.hidden = false;
+      festivalLabel.textContent = seasonal.label;
+      festivalText.textContent =
+        seasonal.key === "spring"
+          ? "今天是春节，主页切到红金拜年模式，愿一家人新年平安又兴旺。"
+          : "今天是中秋，主页切到月光团圆模式，愿一家人今夜团圆又舒心。";
+    }
+  } else if (seasonal && seasonal.daysLeft <= seasonal.preheatDays) {
+    activeSeasonalTheme = seasonal;
+    document.body.classList.add(
+      seasonal.key === "spring" ? "festival-spring-page" : "festival-midautumn-page",
+      "festival-preheat-page",
+    );
+    if (festivalStrip && festivalLabel && festivalText) {
+      festivalStrip.hidden = false;
+      festivalLabel.textContent = `${seasonal.name}预热`;
+      festivalText.textContent = `${seasonal.name}还有 ${seasonal.daysLeft} 天，主页先提前暖场啦。`;
+    }
+  } else if (birthdayPreheat && festivalStrip && festivalLabel && festivalText) {
+    festivalStrip.hidden = false;
+    festivalLabel.textContent = "生日预热";
+    festivalText.textContent = `${birthdayPreheat.name} 还有 ${birthdayPreheat.daysLeft} 天过生日，先把福气和好心情准备起来。`;
+  }
+
+  if (!document.body.classList.contains("birthday-page")) {
+    startHeadlineTyping();
+  }
+}
+
 function updateBirthdayReminder() {
   if (!birthdayName || !birthdayMeta) return;
 
@@ -1581,6 +1940,7 @@ function updateBirthdayReminder() {
       daysLeft: 0,
     };
     updateBirthdayHero(previewBirthday);
+    applySeasonalTheme(previewBirthday);
     birthdayName.textContent = `${previewBirthday.name} 今天过生日啦`;
     birthdayMeta.textContent = `今天是农历${previewBirthday.lunarLabel}，正好生日。`;
     return;
@@ -1590,8 +1950,16 @@ function updateBirthdayReminder() {
   const upcomingCache = loadJsonCache(BIRTHDAY_TODAY_CACHE_KEY);
 
   if (upcomingCache?.todayKey === todayKey && upcomingCache.upcoming) {
-    const upcoming = upcomingCache.upcoming;
+    const upcoming = {
+      ...upcomingCache.upcoming,
+      name: normalizeBirthdayName(upcomingCache.upcoming.name),
+    };
+    saveJsonCache(BIRTHDAY_TODAY_CACHE_KEY, {
+      ...upcomingCache,
+      upcoming,
+    });
     updateBirthdayHero(upcoming);
+    applySeasonalTheme(upcoming);
     birthdayName.textContent =
       upcoming.daysLeft === 0 ? `${upcoming.name} 今天过生日啦` : `${upcoming.name} 快过生日啦`;
     birthdayMeta.textContent =
@@ -1624,6 +1992,7 @@ function updateBirthdayReminder() {
 
   if (!upcoming) {
     updateBirthdayHero(null);
+    applySeasonalTheme(null);
     birthdayName.textContent = "暂时算不出来";
     birthdayMeta.textContent = "生日提醒加载失败。";
     return;
@@ -1639,6 +2008,7 @@ function updateBirthdayReminder() {
   });
 
   updateBirthdayHero(upcoming);
+  applySeasonalTheme(upcoming);
   birthdayName.textContent =
     upcoming.daysLeft === 0 ? `${upcoming.name} 今天过生日啦` : `${upcoming.name} 快过生日啦`;
 
@@ -1651,38 +2021,74 @@ function updateBirthdayReminder() {
 }
 
 function updateBirthdayHero(upcoming) {
-  if (!birthdayHeroBanner || !birthdayHeroText || !mainHeadline || !heroCopy) return;
+  if (!mainHeadline || !heroCopy) return;
 
   if (upcoming?.daysLeft === 0) {
-    birthdayHeroBanner.hidden = false;
+    stopHeadlineTyping();
     if (blessingWall) blessingWall.hidden = false;
     if (familyExtra) familyExtra.open = false;
     if (foodExtra) foodExtra.open = false;
     if (turnipExtra) turnipExtra.open = false;
     document.body.classList.add("birthday-page");
-    birthdayHeroText.textContent = `今天给 ${upcoming.name} 过生日啦`;
     mainHeadline.innerHTML = `🚀 祝 ${upcoming.name} 生日快乐<br />今天一路发发发`;
     heroCopy.classList.add("birthday-mode");
     return;
   }
 
-  birthdayHeroBanner.hidden = true;
   if (blessingWall) blessingWall.hidden = true;
   if (familyExtra) familyExtra.open = true;
   if (turnipExtra) turnipExtra.open = true;
   document.body.classList.remove("birthday-page");
-  mainHeadline.innerHTML = "祝 YIYA YIFAN 发大财<br />大头菜大赢家";
   heroCopy.classList.remove("birthday-mode");
 }
 
-function updateDailyQuote() {
-  if (!dailyQuote) return;
-
+function getDailyHeadline() {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 0);
   const dayIndex = Math.floor((now - startOfYear) / 86400000);
-  const quote = dailyQuotes[dayIndex % dailyQuotes.length];
-  dailyQuote.textContent = quote;
+  const source = activeSeasonalTheme?.headlines?.length ? activeSeasonalTheme.headlines : nourishingHeadlines;
+  return source[dayIndex % source.length];
+}
+
+function stopHeadlineTyping() {
+  if (headlineTypingTimeout) {
+    window.clearTimeout(headlineTypingTimeout);
+    headlineTypingTimeout = null;
+  }
+  if (headlineTypingPauseTimeout) {
+    window.clearTimeout(headlineTypingPauseTimeout);
+    headlineTypingPauseTimeout = null;
+  }
+}
+
+function startHeadlineTyping() {
+  if (!mainHeadline || !festivalStrip || document.body.classList.contains("birthday-page")) return;
+
+  stopHeadlineTyping();
+  const text = getDailyHeadline();
+  let index = 0;
+  mainHeadline.textContent = "";
+
+  const typeNext = () => {
+    if (!mainHeadline || !festivalStrip || document.body.classList.contains("birthday-page")) return;
+    mainHeadline.textContent = text.slice(0, index);
+    mainHeadline.classList.add("is-typing");
+
+    if (index < text.length) {
+      index += 1;
+      headlineTypingTimeout = window.setTimeout(typeNext, 95);
+      return;
+    }
+
+    mainHeadline.classList.remove("is-typing");
+    headlineTypingPauseTimeout = window.setTimeout(() => {
+      if (!mainHeadline || !festivalStrip || document.body.classList.contains("birthday-page")) return;
+      mainHeadline.textContent = text;
+      mainHeadline.classList.add("is-typing");
+    }, 500);
+  };
+
+  typeNext();
 }
 
 function updateTodayInfo() {
@@ -1758,13 +2164,73 @@ function updatePlaceTime() {
   });
 }
 
-function renderPlaceForecast(id, days) {
+function formatShortTime(value) {
+  if (!value) return "--:--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--:--";
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function getAqiLabel(value) {
+  if (!Number.isFinite(value)) return { label: "AQI --", className: "place-chip" };
+  if (value <= 50) return { label: `AQI ${Math.round(value)} 优`, className: "place-chip place-chip-good" };
+  if (value <= 100) return { label: `AQI ${Math.round(value)} 良`, className: "place-chip place-chip-caution" };
+  return { label: `AQI ${Math.round(value)} 注意`, className: "place-chip place-chip-alert" };
+}
+
+function getClothingSuggestion(maxTemp, minTemp, weatherCode) {
+  if (weatherCode >= 61) return "备伞加薄外套";
+  if (maxTemp >= 28) return "短袖为主，注意防晒";
+  if (maxTemp >= 20) return "薄长袖最舒服";
+  if (maxTemp >= 12) return "外套随手带";
+  return "注意保暖，多穿一层";
+}
+
+function getRainAlert(day) {
+  if (!day) return "降雨信息待更新";
+  if ((day.precipitationProbability ?? 0) >= 70 || [61, 63, 65, 80, 81, 82, 95].includes(day.weatherCode)) {
+    return "下雨概率高，出门记得带伞";
+  }
+  if ((day.precipitationProbability ?? 0) >= 35) {
+    return "可能有阵雨，最好备一把伞";
+  }
+  return "今天降雨风险不高";
+}
+
+function getExtremeAlert(day) {
+  if (!day) return "暂无极端天气提示";
+  if ([65, 75, 82, 95].includes(day.weatherCode) || (day.windSpeed ?? 0) >= 50) {
+    return "有强对流或大风，尽量减少久留户外";
+  }
+  if ((day.maxTemp ?? 0) >= 34) return "气温偏高，注意补水防晒";
+  if ((day.minTemp ?? 99) <= 0) return "清晨偏冷，出门注意保暖";
+  return "暂无明显极端天气";
+}
+
+function renderPlaceForecast(id, bundle) {
   const forecastNode = document.querySelector(`#${id}Forecast`);
   if (!forecastNode) return;
 
-  forecastNode.innerHTML = days
-    .slice(0, 3)
-    .map(
+  const summary = Array.isArray(bundle?.summary) ? bundle.summary : [];
+  const days = Array.isArray(bundle?.days) ? bundle.days : [];
+
+  forecastNode.innerHTML = `
+    <div class="place-summary">
+      ${summary
+        .map((item) => `<span class="${escapeHtml(item.className)}">${escapeHtml(item.label)}</span>`)
+        .join("")}
+    </div>
+    <div class="place-alerts">
+      <p>${escapeHtml(bundle?.alerts?.rain || "降雨信息待更新")}</p>
+      <p>${escapeHtml(bundle?.alerts?.extreme || "暂无极端天气提示")}</p>
+    </div>
+    ${days
+      .slice(0, 3)
+      .map(
       (day) => `
         <div class="forecast-day">
           <span class="forecast-day-name">${escapeHtml(day.day)}</span>
@@ -1772,8 +2238,9 @@ function renderPlaceForecast(id, days) {
           <span class="forecast-day-temp">${escapeHtml(day.temp)}</span>
         </div>
       `,
-    )
-    .join("");
+      )
+      .join("")}
+  `;
 }
 
 function getUsdToCnyRate() {
@@ -2205,37 +2672,85 @@ async function loadPlacesWeather() {
   try {
     await Promise.all(
       WEATHER_LOCATIONS.map(async (location) => {
-        const url =
+        const weatherUrl =
           `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}` +
-          `&longitude=${location.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=3&timezone=auto`;
-        const response = await fetch(url, {
-          headers: { accept: "application/json" },
-        });
+          `&longitude=${location.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,wind_speed_10m_max` +
+          `&forecast_days=3&timezone=auto`;
+        const airUrl =
+          `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${location.latitude}` +
+          `&longitude=${location.longitude}&current=us_aqi,pm2_5&timezone=auto`;
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        const [weatherResponse, airResponse] = await Promise.all([
+          fetch(weatherUrl, { headers: { accept: "application/json" } }),
+          fetch(airUrl, { headers: { accept: "application/json" } }),
+        ]);
+
+        if (!weatherResponse.ok) {
+          throw new Error(`HTTP ${weatherResponse.status}`);
         }
 
-        const data = await response.json();
-        const daily = data.daily;
+        const weatherData = await weatherResponse.json();
+        const airData = airResponse.ok ? await airResponse.json() : null;
+        const daily = weatherData.daily;
         const labels = ["今天", "明天", "后天"];
-        const forecast = labels.map((label, index) => ({
+        const days = labels.map((label, index) => ({
           day: label,
+          weatherCode: Number(daily?.weather_code?.[index]),
           weather: weatherCodeToText(daily?.weather_code?.[index]),
+          precipitationProbability: Number(daily?.precipitation_probability_max?.[index]) || 0,
+          windSpeed: Number(daily?.wind_speed_10m_max?.[index]) || 0,
+          maxTemp: Math.round(daily?.temperature_2m_max?.[index] ?? 0),
+          minTemp: Math.round(daily?.temperature_2m_min?.[index] ?? 0),
           temp: `${Math.round(daily?.temperature_2m_max?.[index] ?? 0)}C / ${Math.round(daily?.temperature_2m_min?.[index] ?? 0)}C`,
         }));
+        const todayWeather = days[0];
+        const aqi = Number(airData?.current?.us_aqi);
+        const aqiMeta = getAqiLabel(aqi);
+        const sunrise = formatShortTime(daily?.sunrise?.[0]);
+        const sunset = formatShortTime(daily?.sunset?.[0]);
 
-        renderPlaceForecast(location.id, forecast);
+        renderPlaceForecast(location.id, {
+          summary: [
+            aqiMeta,
+            { label: getClothingSuggestion(todayWeather.maxTemp, todayWeather.minTemp, todayWeather.weatherCode), className: "place-chip" },
+            { label: `日出 ${sunrise}`, className: "place-chip" },
+            { label: `日落 ${sunset}`, className: "place-chip" },
+          ],
+          alerts: {
+            rain: getRainAlert(todayWeather),
+            extreme: getExtremeAlert(todayWeather),
+          },
+          days,
+        });
       }),
     );
 
-    placesStatus.textContent = "三地时间实时更新，天气显示最近 3 天预报。";
+    placesStatus.textContent = "三地时间实时更新，已补充空气质量、穿衣、下雨、日出日落和极端天气提醒。";
   } catch (error) {
     WEATHER_LOCATIONS.forEach((location) => {
-      const fallback = fallbackPlaces[location.id];
-      renderPlaceForecast(location.id, fallback);
+      const fallback = fallbackPlaces[location.id] || [];
+      renderPlaceForecast(location.id, {
+        summary: [
+          { label: "AQI 备用", className: "place-chip" },
+          { label: "穿衣建议待更新", className: "place-chip" },
+          { label: "日出 --:--", className: "place-chip" },
+          { label: "日落 --:--", className: "place-chip" },
+        ],
+        alerts: {
+          rain: "实时降雨提醒暂不可用，先看备用天气。",
+          extreme: "极端天气提示暂不可用。",
+        },
+        days: fallback.map((item) => ({
+          ...item,
+          weatherCode: 0,
+          precipitationProbability: 0,
+          windSpeed: 0,
+          maxTemp: Number(String(item.temp).split("/")[0].replace(/[^0-9-]/g, "")) || 0,
+          minTemp: Number(String(item.temp).split("/")[1]?.replace(/[^0-9-]/g, "")) || 0,
+        })),
+      });
     });
-    placesStatus.textContent = "实时天气暂时不可用，先显示备用信息。";
+    placesStatus.textContent = "实时天气暂时不可用，先显示备用天气和基础提示。";
     console.error(error);
   }
 }
@@ -2307,7 +2822,6 @@ window.setInterval(() => {
 }, MESSAGE_REFRESH_MS);
 updateTodayInfo();
 updateBirthdayReminder();
-updateDailyQuote();
 updatePlaceTime();
 loadCryptoPrices();
 loadNewsHeadlines();
@@ -2316,10 +2830,13 @@ window.setInterval(loadExchangeRate, 10 * 60_000);
 window.setInterval(loadCryptoPrices, CRYPTO_REFRESH_MS);
 window.setInterval(updateTodayInfo, 1000);
 window.setInterval(updateBirthdayReminder, 60 * 60_000);
-window.setInterval(updateDailyQuote, 60 * 60_000);
+window.setInterval(startHeadlineTyping, 60 * 60_000);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     loadCryptoPrices();
+    if (!document.body.classList.contains("birthday-page")) {
+      startHeadlineTyping();
+    }
   }
 });
 window.setInterval(updatePlaceTime, 30_000);

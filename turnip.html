@@ -78,6 +78,14 @@
               数据越完整，建议会越明确。
             </p>
           </article>
+
+          <article class="metric-card">
+            <p class="metric-label">本周收益估算</p>
+            <h2 id="profitEstimateCard">-- 铃钱</h2>
+            <p id="profitEstimateDetail" class="metric-detail">
+              录入价格后，会按最高录入价估算这一周的潜在收益。
+            </p>
+          </article>
         </section>
 
         <section class="content-grid">
@@ -189,6 +197,34 @@
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section class="content-grid turnip-insight-grid">
+          <article class="panel chart-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Weekly Chart</p>
+                <h2>本周价格图</h2>
+              </div>
+              <p class="panel-note">把已录入时段连成线，更容易一眼看出抬升和回落。</p>
+            </div>
+            <div id="turnipChart" class="turnip-chart">
+              <p class="loading-row">录入价格后，这里会显示本周走势图。</p>
+            </div>
+          </article>
+
+          <article class="panel history-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">History</p>
+                <h2>历史周记录</h2>
+              </div>
+              <p class="panel-note">自动保留最近几周的买入价、最高价和收益表现。</p>
+            </div>
+            <div id="turnipHistoryList" class="turnip-history-list">
+              <p class="loading-row">还没有历史记录，本周录入后会自动保存。</p>
+            </div>
+          </article>
         </section>
       </details>
     </main>
