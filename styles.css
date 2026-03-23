@@ -1229,6 +1229,10 @@ textarea {
   font-weight: 800;
 }
 
+.inline-reply-name {
+  min-height: 46px;
+}
+
 .inline-reply-text {
   min-height: 92px;
 }

@@ -726,8 +726,11 @@ function wireReplyActions(entries) {
       if (!entry) return;
       setActiveReply(entry);
       renderMessageBoard(entries);
+      const inlineReplyName = messageList.querySelector("[data-inline-reply-name]");
       const inlineReplyInput = messageList.querySelector("[data-inline-reply-text]");
-      if (inlineReplyInput instanceof HTMLElement) {
+      if (inlineReplyName instanceof HTMLInputElement && !inlineReplyName.value.trim()) {
+        inlineReplyName.focus();
+      } else if (inlineReplyInput instanceof HTMLElement) {
         inlineReplyInput.focus();
       }
       setMessageStatus(`正在回复 ${entry.name}，发送后会挂在这条留言下面。`);
@@ -743,11 +746,12 @@ function wireReplyActions(entries) {
 
   messageList.querySelectorAll("[data-inline-reply-send]").forEach((button) => {
     button.addEventListener("click", async () => {
-      if (!activeReply || !messageNameInput || !messageStatus) return;
+      if (!activeReply || !messageStatus) return;
 
+      const replyNameNode = messageList.querySelector("[data-inline-reply-name]");
       const replyTextNode = messageList.querySelector("[data-inline-reply-text]");
       const text = replyTextNode instanceof HTMLTextAreaElement ? replyTextNode.value.trim().slice(0, 160) : "";
-      const name = messageNameInput.value.trim().slice(0, 20);
+      const name = replyNameNode instanceof HTMLInputElement ? replyNameNode.value.trim().slice(0, 20) : "";
 
       if (!name || !text) {
         setMessageStatus("先写名字和回复内容，再发送。");
@@ -783,6 +787,9 @@ function wireReplyActions(entries) {
         setMessageStatus("回复先保存在这台设备里；等共享表连好后，我们再切回全家共享。");
       }
 
+      if (messageNameInput) {
+        messageNameInput.value = name;
+      }
       clearReply();
       if (messageBoardMode === "shared") {
         setMessageStatus("回复成功，已经挂到对应留言下面了。");
@@ -876,6 +883,14 @@ function renderMessageBoard(entries = loadMessageEntries()) {
             ? `
               <div class="inline-reply-box">
                 <p class="inline-reply-title">回复 ${escapeHtml(entry.name)}</p>
+                <input
+                  class="inline-reply-name"
+                  data-inline-reply-name
+                  type="text"
+                  maxlength="20"
+                  placeholder="你的名字"
+                  value="${escapeHtml(messageNameInput?.value || "")}"
+                />
                 <textarea
                   class="inline-reply-text"
                   data-inline-reply-text
@@ -916,6 +931,14 @@ function renderMessageBoard(entries = loadMessageEntries()) {
                         ? `
                           <div class="inline-reply-box">
                             <p class="inline-reply-title">回复 ${escapeHtml(reply.name)}</p>
+                            <input
+                              class="inline-reply-name"
+                              data-inline-reply-name
+                              type="text"
+                              maxlength="20"
+                              placeholder="你的名字"
+                              value="${escapeHtml(messageNameInput?.value || "")}"
+                            />
                             <textarea
                               class="inline-reply-text"
                               data-inline-reply-text
