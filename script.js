@@ -117,9 +117,6 @@ const messageNameInput = document.querySelector("#messageName");
 const messageTextInput = document.querySelector("#messageText");
 const messageStatus = document.querySelector("#messageStatus");
 const messageList = document.querySelector("#messageList");
-const replyBanner = document.querySelector("#replyBanner");
-const replyBannerText = document.querySelector("#replyBannerText");
-const replyCancel = document.querySelector("#replyCancel");
 const foodStatus = document.querySelector("#foodStatus");
 const foodGrid = document.querySelector("#foodGrid");
 let messageBoardMode = "shared";
@@ -705,12 +702,6 @@ function normalizeMessageEntry(entry) {
   };
 }
 
-function buildReplyPreview(entry) {
-  if (!entry) return "";
-  const preview = entry.text.length > 30 ? `${entry.text.slice(0, 30)}...` : entry.text;
-  return `回复 ${entry.name}：${preview}`;
-}
-
 function setActiveReply(entry) {
   activeReply = entry
     ? {
@@ -719,11 +710,6 @@ function setActiveReply(entry) {
         createdAt: entry.createdAt,
       }
     : null;
-
-  if (replyBanner && replyBannerText) {
-    replyBanner.hidden = !activeReply;
-    replyBannerText.textContent = activeReply ? buildReplyPreview(activeReply) : "";
-  }
 }
 
 function wireReplyActions(entries) {
@@ -739,17 +725,75 @@ function wireReplyActions(entries) {
       );
       if (!entry) return;
       setActiveReply(entry);
-      if (messageTextInput) {
-        messageTextInput.focus();
+      renderMessageBoard(entries);
+      const inlineReplyInput = messageList.querySelector("[data-inline-reply-text]");
+      if (inlineReplyInput instanceof HTMLElement) {
+        inlineReplyInput.focus();
       }
-      setMessageStatus(`正在回复 ${entry.name}，发布后会显示在留言下方。`);
+      setMessageStatus(`正在回复 ${entry.name}，发送后会挂在这条留言下面。`);
+    });
+  });
+
+  messageList.querySelectorAll("[data-inline-reply-cancel]").forEach((button) => {
+    button.addEventListener("click", () => {
+      clearReply();
+      renderMessageBoard(entries);
+    });
+  });
+
+  messageList.querySelectorAll("[data-inline-reply-send]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!activeReply || !messageNameInput || !messageStatus) return;
+
+      const replyTextNode = messageList.querySelector("[data-inline-reply-text]");
+      const text = replyTextNode instanceof HTMLTextAreaElement ? replyTextNode.value.trim().slice(0, 160) : "";
+      const name = messageNameInput.value.trim().slice(0, 20);
+
+      if (!name || !text) {
+        setMessageStatus("先写名字和回复内容，再发送。");
+        return;
+      }
+
+      const replyEntry = {
+        name,
+        text,
+        createdAt: new Date().toISOString(),
+        replyTo: activeReply,
+      };
+
+      if (messageBoardMode === "shared") {
+        try {
+          await createSharedMessage(replyEntry);
+          await syncMessageBoard({ silent: true });
+        } catch {
+          const localEntries = loadMessageEntries();
+          localEntries.push(replyEntry);
+          saveMessageEntries(localEntries);
+          messageBoardMode = "local";
+          renderMessageBoard(localEntries);
+          setMessageStatus("共享发布失败，这条回复先保存在这台设备里了。");
+          clearReply();
+          return;
+        }
+      } else {
+        const localEntries = loadMessageEntries();
+        localEntries.push(replyEntry);
+        saveMessageEntries(localEntries);
+        renderMessageBoard(localEntries);
+        setMessageStatus("回复先保存在这台设备里；等共享表连好后，我们再切回全家共享。");
+      }
+
+      clearReply();
+      if (messageBoardMode === "shared") {
+        setMessageStatus("回复成功，已经挂到对应留言下面了。");
+      }
     });
   });
 }
 
 function clearReply() {
   setActiveReply(null);
-  setMessageStatus("已取消回复，现在会发布成一条新的留言。");
+  setMessageStatus("已取消回复。");
 }
 
 function isSameMessage(left, right) {
@@ -775,7 +819,11 @@ function buildThreadedMessages(entries) {
     parents.push({ ...entry, replies: [] });
   });
 
-  return parents;
+  parents.forEach((parent) => {
+    parent.replies.sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)));
+  });
+
+  return parents.sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)));
 }
 
 function formatMessageTime(value) {
@@ -823,6 +871,26 @@ function renderMessageBoard(entries = loadMessageEntries()) {
           >回复</button>
         </div>
         <p class="message-copy">${escapeHtml(entry.text)}</p>
+        ${
+          activeReply && isSameMessage(entry, activeReply)
+            ? `
+              <div class="inline-reply-box">
+                <p class="inline-reply-title">回复 ${escapeHtml(entry.name)}</p>
+                <textarea
+                  class="inline-reply-text"
+                  data-inline-reply-text
+                  rows="3"
+                  maxlength="160"
+                  placeholder="直接回复这条留言..."
+                ></textarea>
+                <div class="inline-reply-actions">
+                  <button class="primary-button inline-reply-send" type="button" data-inline-reply-send>发送回复</button>
+                  <button class="ghost-button inline-reply-cancel" type="button" data-inline-reply-cancel>取消</button>
+                </div>
+              </div>
+            `
+            : ""
+        }
         ${entry.replies.length ? `
           <div class="message-replies">
             ${entry.replies
@@ -843,6 +911,26 @@ function renderMessageBoard(entries = loadMessageEntries()) {
                       >回复</button>
                     </div>
                     <p class="message-copy">${escapeHtml(reply.text)}</p>
+                    ${
+                      activeReply && isSameMessage(reply, activeReply)
+                        ? `
+                          <div class="inline-reply-box">
+                            <p class="inline-reply-title">回复 ${escapeHtml(reply.name)}</p>
+                            <textarea
+                              class="inline-reply-text"
+                              data-inline-reply-text
+                              rows="3"
+                              maxlength="160"
+                              placeholder="直接回复这条留言..."
+                            ></textarea>
+                            <div class="inline-reply-actions">
+                              <button class="primary-button inline-reply-send" type="button" data-inline-reply-send>发送回复</button>
+                              <button class="ghost-button inline-reply-cancel" type="button" data-inline-reply-cancel>取消</button>
+                            </div>
+                          </div>
+                        `
+                        : ""
+                    }
                   </article>
                 `,
               )
@@ -894,7 +982,7 @@ async function handleMessageSubmit(event) {
     name,
     text,
     createdAt: new Date().toISOString(),
-    replyTo: activeReply,
+    replyTo: null,
   };
 
   if (messageBoardMode === "shared") {
@@ -910,7 +998,6 @@ async function handleMessageSubmit(event) {
       setMessageStatus("共享发布失败，这条留言先保存在这台设备里了。");
       messageNameInput.value = name;
       messageTextInput.value = "";
-      setActiveReply(null);
       return;
     }
   } else {
@@ -923,7 +1010,6 @@ async function handleMessageSubmit(event) {
 
   messageNameInput.value = name;
   messageTextInput.value = "";
-  setActiveReply(null);
   if (messageBoardMode === "shared") {
     setMessageStatus("发布成功，这条留言全家人现在都能看到了。");
   }
@@ -1608,10 +1694,6 @@ if (quickEntryApply) {
 
 if (messageForm) {
   messageForm.addEventListener("submit", handleMessageSubmit);
-}
-
-if (replyCancel) {
-  replyCancel.addEventListener("click", clearReply);
 }
 
 createInputs();

@@ -1105,33 +1105,6 @@ body.birthday-page .turnip-extra tbody tr:hover {
   margin-bottom: 16px;
 }
 
-.reply-banner {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  border-radius: 20px;
-  background: rgba(255, 248, 224, 0.94);
-  border: 1px solid var(--line);
-}
-
-.reply-banner-label {
-  color: #7aa545;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.reply-banner-text {
-  margin-top: 4px;
-  color: var(--text);
-  font-size: 0.94rem;
-  line-height: 1.55;
-}
-
 .message-field {
   height: 100%;
 }
@@ -1217,29 +1190,6 @@ textarea {
   cursor: pointer;
 }
 
-.message-reply-context {
-  margin-bottom: 10px;
-  padding: 10px 12px;
-  border-left: 3px solid rgba(122, 179, 93, 0.38);
-  border-radius: 14px;
-  background: rgba(248, 252, 244, 0.9);
-}
-
-.message-reply-name {
-  color: #7aa545;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.message-reply-quote {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 .message-replies {
   display: grid;
   gap: 10px;
@@ -1261,6 +1211,32 @@ textarea {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 6px;
+}
+
+.inline-reply-box {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(248, 252, 244, 0.94);
+  border: 1px solid rgba(122, 179, 93, 0.18);
+}
+
+.inline-reply-title {
+  color: #7aa545;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.inline-reply-text {
+  min-height: 92px;
+}
+
+.inline-reply-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .message-copy {
@@ -1287,6 +1263,59 @@ textarea {
 .field-card span {
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+body.birthday-page .message-board {
+  --message-panel: rgba(255, 249, 236, 0.95);
+  --message-panel-strong: rgba(255, 252, 242, 0.98);
+  --message-line: rgba(168, 106, 62, 0.18);
+  --message-text: #5c3416;
+  --message-muted: #8a5a36;
+}
+
+body.birthday-page .message-board,
+body.birthday-page .message-board .message-card {
+  background: var(--message-panel);
+  border-color: var(--message-line);
+  color: var(--message-text);
+}
+
+body.birthday-page .message-board .panel-note,
+body.birthday-page .message-board .message-status,
+body.birthday-page .message-board .message-time,
+body.birthday-page .message-board .field-card span {
+  color: var(--message-muted);
+}
+
+body.birthday-page .message-board .field-card,
+body.birthday-page .message-board .inline-reply-box,
+body.birthday-page .message-board .message-reply-item {
+  background: var(--message-panel-strong);
+  border-color: var(--message-line);
+}
+
+body.birthday-page .message-board input,
+body.birthday-page .message-board textarea {
+  background: #fffdf6;
+  color: var(--message-text);
+}
+
+body.birthday-page .message-board .message-author,
+body.birthday-page .message-board .message-copy,
+body.birthday-page .message-board .inline-reply-title {
+  color: var(--message-text);
+}
+
+body.birthday-page .message-board .message-reply-button,
+body.birthday-page .message-board .ghost-button {
+  background: rgba(255, 247, 226, 0.96);
+  color: var(--message-text);
+  border-color: rgba(168, 106, 62, 0.24);
+}
+
+body.birthday-page .message-board .primary-button {
+  background: linear-gradient(135deg, #bf6540 0%, #a94f2d 100%);
+  color: #fff9f1;
 }
 
 input {
@@ -1743,11 +1772,6 @@ tbody tr:hover {
     gap: 4px;
   }
 
-  .reply-banner {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .message-reply-button {
     align-self: flex-start;
   }
@@ -1756,6 +1780,11 @@ tbody tr:hover {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+  }
+
+  .inline-reply-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .news-strip-header {
