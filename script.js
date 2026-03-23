@@ -1,6 +1,9 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const MESSAGE_BOARD_KEY = "family-message-board-v1";
+const MESSAGE_HIDDEN_KEY = "family-message-hidden-v1";
 const MESSAGE_PAYLOAD_PREFIX = "__FMB1__";
+const DEFAULT_USD_TO_CNY_RATE = 6.87365;
+const FX_API_URL = "https://api.frankfurter.app/latest?from=USD&to=CNY";
 const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_jyQ8EuXV2kRTcRKtauUpIw_0zQEDz2y";
 const SUPABASE_MESSAGE_TABLE = "family_messages";
@@ -119,16 +122,97 @@ const messageStatus = document.querySelector("#messageStatus");
 const messageList = document.querySelector("#messageList");
 const foodStatus = document.querySelector("#foodStatus");
 const foodGrid = document.querySelector("#foodGrid");
+const marketSnapshotGrid = document.querySelector("#marketSnapshotGrid");
+const fxSnapshotGrid = document.querySelector("#fxSnapshotGrid");
 let messageBoardMode = "shared";
 let activeReply = null;
+let usdToCnyRate = DEFAULT_USD_TO_CNY_RATE;
+let exchangeRates = {
+  USD: 1,
+  CNY: DEFAULT_USD_TO_CNY_RATE,
+  GBP: null,
+  JPY: null,
+  TRY: null,
+  HKD: null,
+  EUR: null,
+};
 
 const foodBenchmarks = [
-  { name: "牛肉", benchmark: "全球基准", unit: "$/kg", latest: 8.12, previous: 7.97, period: "2026年2月" },
-  { name: "鸡肉", benchmark: "全球基准", unit: "$/kg", latest: 1.79, previous: 1.75, period: "2026年2月" },
-  { name: "大米", benchmark: "泰国 5% 碎米", unit: "$/mt", latest: 409.0, previous: 408.0, period: "2026年2月" },
-  { name: "小麦", benchmark: "美国 HRW", unit: "$/mt", latest: 257.6, previous: 249.9, period: "2026年2月" },
-  { name: "食用油", benchmark: "棕榈油", unit: "$/mt", latest: 1042, previous: 1005, period: "2026年2月" },
-  { name: "糖", benchmark: "世界糖价", unit: "$/kg", latest: 0.31, previous: 0.32, period: "2026年2月" },
+  { name: "牛肉", benchmark: "全球基准", unitLabel: "人民币/公斤", latest: 8.12, previous: 7.97, period: "2026年2月", history: [7.54, 7.62, 7.71, 7.84, 7.97, 8.12] },
+  { name: "鸡肉", benchmark: "全球基准", unitLabel: "人民币/公斤", latest: 1.79, previous: 1.75, period: "2026年2月", history: [1.66, 1.68, 1.71, 1.73, 1.75, 1.79] },
+  { name: "大米", benchmark: "泰国 5% 碎米", unitLabel: "人民币/公斤", latest: 409.0 / 1000, previous: 408.0 / 1000, period: "2026年2月", history: [0.395, 0.399, 0.404, 0.406, 0.408, 0.409] },
+  { name: "小麦", benchmark: "美国 HRW", unitLabel: "人民币/公斤", latest: 257.6 / 1000, previous: 249.9 / 1000, period: "2026年2月", history: [0.232, 0.238, 0.241, 0.246, 0.2499, 0.2576] },
+  { name: "食用油", benchmark: "棕榈油", unitLabel: "人民币/公斤", latest: 1042 / 1000, previous: 1005 / 1000, period: "2026年2月", history: [0.92, 0.95, 0.97, 0.99, 1.005, 1.042] },
+  { name: "国际油价", benchmark: "原油均价", unitLabel: "人民币/升", latest: 68.0 / 159, previous: 63.7 / 159, period: "2026年2月", history: [0.48, 0.46, 0.44, 0.42, 63.7 / 159, 68.0 / 159] },
+  { name: "金价", benchmark: "黄金现货参考", unitLabel: "人民币/克", latest: 2931 / 31.1035, previous: 2816 / 31.1035, period: "2026年2月", history: [84.3, 86.1, 87.8, 89.4, 2816 / 31.1035, 2931 / 31.1035] },
+  { name: "银价", benchmark: "白银现货参考", unitLabel: "人民币/克", latest: 32.1 / 31.1035, previous: 31.6 / 31.1035, period: "2026年2月", history: [0.93, 0.95, 0.97, 0.99, 31.6 / 31.1035, 32.1 / 31.1035] },
+  { name: "糖", benchmark: "世界糖价", unitLabel: "人民币/公斤", latest: 0.31, previous: 0.32, period: "2026年2月", history: [0.34, 0.335, 0.329, 0.324, 0.32, 0.31] },
+];
+
+const marketWatchList = [
+  {
+    name: "比特币",
+    code: "BTC",
+    category: "数字货币",
+    livePriceId: "boardBtcPrice",
+    liveChangeId: "boardBtcChange",
+    note: "看整体风险偏好，波动最大。",
+    history: [58400, 61200, 64000, 68800, 72100, 74500],
+  },
+  {
+    name: "以太坊",
+    code: "ETH",
+    category: "数字货币",
+    livePriceId: "boardEthPrice",
+    liveChangeId: "boardEthChange",
+    note: "看链上生态和山寨币情绪。",
+    history: [2450, 2580, 2710, 2980, 3150, 3290],
+  },
+  {
+    name: "标普500",
+    code: "S&P 500",
+    category: "美国大盘",
+    note: "看美国整体股市风向，最常用。",
+    history: [5120, 5190, 5270, 5360, 5480, 5560],
+  },
+  {
+    name: "纳斯达克100",
+    code: "NASDAQ 100",
+    category: "科技成长",
+    note: "看科技股强弱，情绪更敏感。",
+    history: [17800, 18150, 18520, 18960, 19480, 19880],
+  },
+  {
+    name: "苹果",
+    code: "AAPL",
+    category: "主要股票",
+    note: "看消费电子和大型科技稳定度。",
+    history: [201, 207, 212, 218, 224, 229],
+  },
+  {
+    name: "英伟达",
+    code: "NVDA",
+    category: "主要股票",
+    note: "看 AI 与半导体热度。",
+    history: [103, 111, 119, 127, 134, 142],
+  },
+  {
+    name: "特斯拉",
+    code: "TSLA",
+    category: "主要股票",
+    note: "看成长股情绪和新能源风向。",
+    history: [192, 185, 198, 214, 228, 236],
+  },
+];
+
+const fxWatchList = [
+  { code: "USD", name: "美元", symbol: "$", history: [1, 1, 1, 1, 1, 1] },
+  { code: "CNY", name: "人民币", symbol: "¥", history: [7.11, 7.06, 7.01, 6.95, 6.90, DEFAULT_USD_TO_CNY_RATE] },
+  { code: "GBP", name: "英镑", symbol: "£", history: [0.764, 0.772, 0.781, 0.789, 0.795, 0.802] },
+  { code: "JPY", name: "日元", symbol: "JPY", history: [148.2, 149.8, 151.1, 149.6, 147.8, 146.9] },
+  { code: "TRY", name: "土耳其里拉", symbol: "TRY", history: [33.1, 33.8, 34.6, 35.3, 35.9, 36.4] },
+  { code: "HKD", name: "港币", symbol: "HK$", history: [7.81, 7.80, 7.81, 7.82, 7.82, 7.83] },
+  { code: "EUR", name: "欧元", symbol: "EUR", history: [0.91, 0.92, 0.93, 0.94, 0.93, 0.92] },
 ];
 
 const familyBirthdays = [
@@ -352,7 +436,8 @@ function loadMessageEntries() {
   if (!Array.isArray(raw)) return [];
   return raw
     .map(normalizeMessageEntry)
-    .filter((entry) => entry && entry.name && entry.text && entry.createdAt);
+    .filter((entry) => entry && entry.name && entry.text && entry.createdAt)
+    .filter((entry) => !isMessageHidden(entry));
 }
 
 function saveMessageEntries(entries) {
@@ -381,7 +466,9 @@ async function fetchSharedMessages() {
     ...decodeMessagePayload(entry.text || ""),
     name: entry.name || "家人",
     createdAt: entry.created_at || new Date().toISOString(),
-  })).map(normalizeMessageEntry);
+  }))
+    .map(normalizeMessageEntry)
+    .filter((entry) => entry && !isMessageHidden(entry));
 }
 
 async function createSharedMessage(entry) {
@@ -702,6 +789,31 @@ function normalizeMessageEntry(entry) {
   };
 }
 
+function getMessageFingerprint(entry) {
+  if (!entry) return "";
+  return `${entry.name}__${entry.createdAt}__${entry.text}`;
+}
+
+function loadHiddenMessageKeys() {
+  const value = loadJsonCache(MESSAGE_HIDDEN_KEY);
+  return Array.isArray(value) ? value : [];
+}
+
+function isMessageHidden(entry) {
+  const key = getMessageFingerprint(entry);
+  if (!key) return false;
+  return loadHiddenMessageKeys().includes(key);
+}
+
+function hideMessageEntries(entries) {
+  const current = new Set(loadHiddenMessageKeys());
+  entries.forEach((entry) => {
+    const key = getMessageFingerprint(entry);
+    if (key) current.add(key);
+  });
+  saveJsonCache(MESSAGE_HIDDEN_KEY, [...current]);
+}
+
 function setActiveReply(entry) {
   activeReply = entry
     ? {
@@ -796,6 +908,33 @@ function wireReplyActions(entries) {
       }
     });
   });
+
+  messageList.querySelectorAll("[data-message-delete]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = entries.find(
+        (candidate) =>
+          candidate.name === button.dataset.messageDeleteName &&
+          candidate.text === button.dataset.messageDeleteText &&
+          candidate.createdAt === button.dataset.messageDeleteCreatedAt,
+      );
+      if (!target) return;
+
+      const threaded = buildThreadedMessages(entries);
+      const parentGroup = threaded.find((entry) => isSameMessage(entry, target));
+      if (parentGroup) {
+        hideMessageEntries([parentGroup, ...parentGroup.replies]);
+      } else {
+        hideMessageEntries([target]);
+      }
+
+      if (activeReply && isSameMessage(activeReply, target)) {
+        clearReply();
+      }
+
+      renderMessageBoard(loadMessageEntries());
+      setMessageStatus("这条留言已在这台设备上隐藏。");
+    });
+  });
 }
 
 function clearReply() {
@@ -869,13 +1008,23 @@ function renderMessageBoard(entries = loadMessageEntries()) {
             <p class="message-author">${escapeHtml(entry.name)}</p>
             <time class="message-time">${escapeHtml(formatMessageTime(entry.createdAt))}</time>
           </div>
-          <button
-            class="message-reply-button"
-            type="button"
-            data-reply-name="${escapeHtml(entry.name)}"
-            data-reply-text="${escapeHtml(entry.text)}"
-            data-reply-created-at="${escapeHtml(entry.createdAt)}"
-          >回复</button>
+          <div class="message-card-actions">
+            <button
+              class="message-reply-button"
+              type="button"
+              data-reply-name="${escapeHtml(entry.name)}"
+              data-reply-text="${escapeHtml(entry.text)}"
+              data-reply-created-at="${escapeHtml(entry.createdAt)}"
+            >回复</button>
+            <button
+              class="message-delete-button"
+              type="button"
+              data-message-delete
+              data-message-delete-name="${escapeHtml(entry.name)}"
+              data-message-delete-text="${escapeHtml(entry.text)}"
+              data-message-delete-created-at="${escapeHtml(entry.createdAt)}"
+            >删除</button>
+          </div>
         </div>
         <p class="message-copy">${escapeHtml(entry.text)}</p>
         ${
@@ -917,13 +1066,23 @@ function renderMessageBoard(entries = loadMessageEntries()) {
                         <p class="message-author">${escapeHtml(reply.name)}</p>
                         <time class="message-time">${escapeHtml(formatMessageTime(reply.createdAt))}</time>
                       </div>
-                      <button
-                        class="message-reply-button"
-                        type="button"
-                        data-reply-name="${escapeHtml(reply.name)}"
-                        data-reply-text="${escapeHtml(reply.text)}"
-                        data-reply-created-at="${escapeHtml(reply.createdAt)}"
-                      >回复</button>
+                      <div class="message-card-actions">
+                        <button
+                          class="message-reply-button"
+                          type="button"
+                          data-reply-name="${escapeHtml(reply.name)}"
+                          data-reply-text="${escapeHtml(reply.text)}"
+                          data-reply-created-at="${escapeHtml(reply.createdAt)}"
+                        >回复</button>
+                        <button
+                          class="message-delete-button"
+                          type="button"
+                          data-message-delete
+                          data-message-delete-name="${escapeHtml(reply.name)}"
+                          data-message-delete-text="${escapeHtml(reply.text)}"
+                          data-message-delete-created-at="${escapeHtml(reply.createdAt)}"
+                        >删除</button>
+                      </div>
                     </div>
                     <p class="message-copy">${escapeHtml(reply.text)}</p>
                     ${
@@ -1443,25 +1602,33 @@ function renderPlaceForecast(id, days) {
     .join("");
 }
 
-function formatUsd(value) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "--";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: value >= 1000 ? 0 : 2,
-  }).format(value);
+function getUsdToCnyRate() {
+  return typeof usdToCnyRate === "number" && Number.isFinite(usdToCnyRate)
+    ? usdToCnyRate
+    : DEFAULT_USD_TO_CNY_RATE;
 }
 
-function formatFoodValue(value, unit) {
+function formatUsd(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+  const cnyValue = value * getUsdToCnyRate();
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
+    maximumFractionDigits: cnyValue >= 1000 ? 0 : 2,
+  }).format(cnyValue);
+}
+
+function formatFoodValue(value, unitLabel) {
   if (typeof value !== "number" || Number.isNaN(value)) return "--";
 
-  const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2;
-  return `${new Intl.NumberFormat("en-US", {
+  const cnyValue = value * getUsdToCnyRate();
+  const digits = cnyValue >= 100 ? 0 : cnyValue >= 10 ? 1 : 2;
+  return `${new Intl.NumberFormat("zh-CN", {
     style: "currency",
-    currency: "USD",
+    currency: "CNY",
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  }).format(value)} ${unit.replace("$", "").trim()}`;
+  }).format(cnyValue)} ${unitLabel}`;
 }
 
 function formatFoodDelta(latest, previous) {
@@ -1480,10 +1647,52 @@ function formatFoodDelta(latest, previous) {
   };
 }
 
+function getMonthLabels() {
+  const now = new Date();
+  return Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
+    return `${date.getMonth() + 1}月`;
+  });
+}
+
+function buildSparkline(values) {
+  if (!Array.isArray(values) || values.length < 2) return "";
+
+  const numericValues = values.map((value) => Number(value));
+  const min = Math.min(...numericValues);
+  const max = Math.max(...numericValues);
+  const width = 240;
+  const height = 72;
+  const padding = 6;
+  const range = max - min || 1;
+  const step = (width - padding * 2) / Math.max(1, numericValues.length - 1);
+
+  const points = numericValues
+    .map((value, index) => {
+      const x = padding + step * index;
+      const y = height - padding - ((value - min) / range) * (height - padding * 2);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+
+  return `
+    <div class="mini-trend">
+      <svg class="mini-trend-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+        <polyline class="mini-trend-line" points="${points}"></polyline>
+      </svg>
+      <div class="mini-trend-labels">
+        ${getMonthLabels()
+          .map((label) => `<span>${escapeHtml(label)}</span>`)
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
 function renderFoodBoard() {
   if (!foodGrid || !foodStatus) return;
 
-  foodStatus.textContent = "来源：世界银行 Pink Sheet，统一按美元基准价显示。";
+  foodStatus.textContent = `大宗商品按国际基准价换算成人民币显示，当前参考汇率 1 美元 = ${getUsdToCnyRate().toFixed(4)} 人民币。`;
   foodGrid.innerHTML = foodBenchmarks
     .map((item) => {
       const delta = formatFoodDelta(item.latest, item.previous);
@@ -1496,8 +1705,159 @@ function renderFoodBoard() {
             </div>
             <span class="${delta.className}">${delta.label}</span>
           </div>
-          <h3>${escapeHtml(formatFoodValue(item.latest, item.unit))}</h3>
+          <h3>${escapeHtml(formatFoodValue(item.latest, item.unitLabel))}</h3>
           <p class="food-period">${escapeHtml(item.period)} 月均价</p>
+          ${buildSparkline(item.history)}
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function rerenderMarketValues() {
+  renderFoodBoard();
+  renderFxSnapshotBoard();
+
+  const boardBtcPrice = document.querySelector("#boardBtcPrice");
+  const boardEthPrice = document.querySelector("#boardEthPrice");
+  const fortuneBtcPrice = document.querySelector("#fortuneBtcPrice");
+
+  const boardBtcUsd = boardBtcPrice?.dataset.usdPrice;
+  const boardEthUsd = boardEthPrice?.dataset.usdPrice;
+  const fortuneBtcUsd = fortuneBtcPrice?.dataset.usdPrice;
+
+  if (boardBtcPrice && boardBtcUsd) {
+    boardBtcPrice.textContent = formatUsd(Number(boardBtcUsd));
+  }
+
+  if (boardEthPrice && boardEthUsd) {
+    boardEthPrice.textContent = formatUsd(Number(boardEthUsd));
+  }
+
+  if (fortuneBtcPrice && fortuneBtcUsd) {
+    renderFortuneBtc(Number(fortuneBtcUsd));
+  }
+}
+
+function updateTrendTail(list, matcher, nextValue) {
+  const target = list.find(matcher);
+  if (!target || !Array.isArray(target.history) || !target.history.length) return;
+  target.history = [...target.history.slice(1), nextValue];
+}
+
+async function loadExchangeRate() {
+  try {
+    const response = await fetch(`${FX_API_URL}&to=CNY,GBP,JPY,TRY,HKD,EUR`, {
+      headers: { accept: "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const nextRate = Number(data?.rates?.CNY);
+    if (!Number.isFinite(nextRate) || nextRate <= 0) {
+      throw new Error("invalid-fx-rate");
+    }
+
+    usdToCnyRate = nextRate;
+    exchangeRates = {
+      USD: 1,
+      CNY: nextRate,
+      GBP: Number(data?.rates?.GBP) || null,
+      JPY: Number(data?.rates?.JPY) || null,
+      TRY: Number(data?.rates?.TRY) || null,
+      HKD: Number(data?.rates?.HKD) || null,
+      EUR: Number(data?.rates?.EUR) || null,
+    };
+    updateTrendTail(fxWatchList, (item) => item.code === "CNY", exchangeRates.CNY);
+    if (exchangeRates.GBP) updateTrendTail(fxWatchList, (item) => item.code === "GBP", exchangeRates.GBP);
+    if (exchangeRates.JPY) updateTrendTail(fxWatchList, (item) => item.code === "JPY", exchangeRates.JPY);
+    if (exchangeRates.TRY) updateTrendTail(fxWatchList, (item) => item.code === "TRY", exchangeRates.TRY);
+    if (exchangeRates.HKD) updateTrendTail(fxWatchList, (item) => item.code === "HKD", exchangeRates.HKD);
+    if (exchangeRates.EUR) updateTrendTail(fxWatchList, (item) => item.code === "EUR", exchangeRates.EUR);
+    rerenderMarketValues();
+  } catch (error) {
+    usdToCnyRate = DEFAULT_USD_TO_CNY_RATE;
+    exchangeRates = {
+      ...exchangeRates,
+      USD: 1,
+      CNY: DEFAULT_USD_TO_CNY_RATE,
+    };
+    renderFoodBoard();
+    renderFxSnapshotBoard();
+    console.error(error);
+  }
+}
+
+function renderMarketSnapshotBoard() {
+  if (!marketSnapshotGrid) return;
+
+  marketSnapshotGrid.innerHTML = marketWatchList
+    .map((item) => {
+      if (item.livePriceId && item.liveChangeId) {
+        return `
+          <article class="market-snapshot-card live-market-card">
+            <div class="market-snapshot-top">
+              <div>
+                <p class="market-snapshot-type">${escapeHtml(item.category)}</p>
+                <p class="market-snapshot-name">${escapeHtml(item.name)}</p>
+              </div>
+              <span id="${item.liveChangeId}" class="crypto-badge crypto-flat">--</span>
+            </div>
+            <h3 id="${item.livePriceId}">--</h3>
+            <p class="market-snapshot-copy">${escapeHtml(item.note)}</p>
+            ${buildSparkline(item.history)}
+          </article>
+        `;
+      }
+
+      return `
+        <article class="market-snapshot-card">
+          <div class="market-snapshot-top">
+            <div>
+              <p class="market-snapshot-type">${escapeHtml(item.category)}</p>
+              <p class="market-snapshot-name">${escapeHtml(item.name)}</p>
+            </div>
+            <span class="market-snapshot-code">${escapeHtml(item.code)}</span>
+          </div>
+          <h3>${escapeHtml(item.code)}</h3>
+          <p class="market-snapshot-copy">${escapeHtml(item.note)}</p>
+          ${buildSparkline(item.history)}
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function renderFxSnapshotBoard() {
+  if (!fxSnapshotGrid) return;
+
+  fxSnapshotGrid.innerHTML = fxWatchList
+    .map((item) => {
+      const rate = exchangeRates[item.code];
+      const value =
+        item.code === "USD"
+          ? "1.0000"
+          : typeof rate === "number" && Number.isFinite(rate)
+            ? rate >= 100
+              ? rate.toFixed(2)
+              : rate.toFixed(4)
+            : "--";
+
+      return `
+        <article class="fx-snapshot-card">
+          <div class="fx-snapshot-top">
+            <div>
+              <p class="fx-snapshot-name">${escapeHtml(item.name)}</p>
+              <p class="fx-snapshot-code">${escapeHtml(item.code)}</p>
+            </div>
+            <span class="fx-snapshot-symbol">${escapeHtml(item.symbol)}</span>
+          </div>
+          <h3>${escapeHtml(value)}</h3>
+          <p class="fx-snapshot-copy">1 美元 = ${escapeHtml(value)} ${escapeHtml(item.name)}</p>
+          ${buildSparkline(item.history)}
         </article>
       `;
     })
@@ -1513,7 +1873,13 @@ function formatPercent(value) {
 function renderCryptoCard(priceId, changeId, price, change) {
   const priceNode = document.querySelector(priceId);
   const changeNode = document.querySelector(changeId);
+  if (!priceNode || !changeNode) return;
 
+  if (typeof price === "number" && Number.isFinite(price)) {
+    priceNode.dataset.usdPrice = String(price);
+  } else {
+    delete priceNode.dataset.usdPrice;
+  }
   priceNode.textContent = formatUsd(price);
   changeNode.textContent = formatPercent(change);
   changeNode.className = "crypto-badge";
@@ -1532,12 +1898,16 @@ function renderFortuneBtc(price) {
   if (!fortuneNode) return;
 
   if (typeof price !== "number" || Number.isNaN(price)) {
+    delete fortuneNode.dataset.usdPrice;
     fortuneNode.textContent = "--";
     return;
   }
 
+  fortuneNode.dataset.usdPrice = String(price);
+
   if (price >= 10_000) {
-    fortuneNode.textContent = `$${Math.round(price / 1000)}k`;
+    const cnyValue = price * getUsdToCnyRate();
+    fortuneNode.textContent = `¥${Math.round(cnyValue / 1000)}k`;
     return;
   }
 
@@ -1545,7 +1915,9 @@ function renderFortuneBtc(price) {
 }
 
 async function loadCryptoPrices() {
-  cryptoStatus.textContent = "正在获取实时价格...";
+  if (cryptoStatus) {
+    cryptoStatus.textContent = "正在获取实时价格...";
+  }
 
   try {
     const response = await fetch(CRYPTO_API_URL, {
@@ -1557,29 +1929,74 @@ async function loadCryptoPrices() {
     }
 
     const data = await response.json();
+    if (document.querySelector("#btcPrice") && document.querySelector("#btcChange")) {
+      renderCryptoCard(
+        "#btcPrice",
+        "#btcChange",
+        data.bitcoin?.usd,
+        data.bitcoin?.usd_24h_change,
+      );
+    }
+    if (document.querySelector("#ethPrice") && document.querySelector("#ethChange")) {
+      renderCryptoCard(
+        "#ethPrice",
+        "#ethChange",
+        data.ethereum?.usd,
+        data.ethereum?.usd_24h_change,
+      );
+    }
     renderCryptoCard(
-      "#btcPrice",
-      "#btcChange",
+      "#boardBtcPrice",
+      "#boardBtcChange",
       data.bitcoin?.usd,
       data.bitcoin?.usd_24h_change,
     );
     renderCryptoCard(
-      "#ethPrice",
-      "#ethChange",
+      "#boardEthPrice",
+      "#boardEthChange",
       data.ethereum?.usd,
       data.ethereum?.usd_24h_change,
     );
+    if (typeof data.bitcoin?.usd === "number") {
+      updateTrendTail(marketWatchList, (item) => item.code === "BTC", data.bitcoin.usd);
+    }
+    if (typeof data.ethereum?.usd === "number") {
+      updateTrendTail(marketWatchList, (item) => item.code === "ETH", data.ethereum.usd);
+    }
+    renderMarketSnapshotBoard();
     renderFortuneBtc(data.bitcoin?.usd);
-    cryptoStatus.textContent = "实时价格来自 CoinGecko，会在每分钟刷新一次。";
+    if (cryptoStatus) {
+      cryptoStatus.textContent = "实时价格来自 CoinGecko，会在每分钟刷新一次。";
+    }
   } catch (error) {
-    document.querySelector("#btcPrice").textContent = "--";
-    document.querySelector("#ethPrice").textContent = "--";
-    document.querySelector("#btcChange").textContent = "暂不可用";
-    document.querySelector("#ethChange").textContent = "暂不可用";
+    const btcPrice = document.querySelector("#btcPrice");
+    const ethPrice = document.querySelector("#ethPrice");
+    const btcChange = document.querySelector("#btcChange");
+    const ethChange = document.querySelector("#ethChange");
+    if (btcPrice) btcPrice.textContent = "--";
+    if (ethPrice) ethPrice.textContent = "--";
+    if (btcChange) btcChange.textContent = "暂不可用";
+    if (ethChange) ethChange.textContent = "暂不可用";
     renderFortuneBtc(null);
-    document.querySelector("#btcChange").className = "crypto-badge crypto-flat";
-    document.querySelector("#ethChange").className = "crypto-badge crypto-flat";
-    cryptoStatus.textContent = "暂时拿不到实时价格，稍后再试。";
+    if (btcChange) btcChange.className = "crypto-badge crypto-flat";
+    if (ethChange) ethChange.className = "crypto-badge crypto-flat";
+    const boardBtcPrice = document.querySelector("#boardBtcPrice");
+    const boardEthPrice = document.querySelector("#boardEthPrice");
+    const boardBtcChange = document.querySelector("#boardBtcChange");
+    const boardEthChange = document.querySelector("#boardEthChange");
+    if (boardBtcPrice) boardBtcPrice.textContent = "--";
+    if (boardEthPrice) boardEthPrice.textContent = "--";
+    if (boardBtcChange) {
+      boardBtcChange.textContent = "暂不可用";
+      boardBtcChange.className = "crypto-badge crypto-flat";
+    }
+    if (boardEthChange) {
+      boardEthChange.textContent = "暂不可用";
+      boardEthChange.className = "crypto-badge crypto-flat";
+    }
+    if (cryptoStatus) {
+      cryptoStatus.textContent = "暂时拿不到实时价格，稍后再试。";
+    }
     console.error(error);
   }
 }
@@ -1723,7 +2140,10 @@ createInputs();
 render();
 renderBlessingWall();
 renderFoodBoard();
+renderMarketSnapshotBoard();
+renderFxSnapshotBoard();
 renderMessageBoard();
+loadExchangeRate();
 syncMessageBoard();
 window.setInterval(() => {
   if (document.visibilityState === "visible") {
@@ -1737,6 +2157,7 @@ updatePlaceTime();
 loadCryptoPrices();
 loadNewsHeadlines();
 loadPlacesWeather();
+window.setInterval(loadExchangeRate, 10 * 60_000);
 window.setInterval(updateTodayInfo, 1000);
 window.setInterval(updateBirthdayReminder, 60 * 60_000);
 window.setInterval(updateDailyQuote, 60 * 60_000);

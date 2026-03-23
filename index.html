@@ -132,31 +132,6 @@
           <span class="home-extra-tip">点击展开</span>
         </summary>
 
-      <section class="crypto-reminder" aria-label="BTC ETH 价格提醒">
-        <div class="crypto-reminder-copy">
-          <p class="eyebrow">顺手提醒</p>
-          <p id="cryptoStatus" class="crypto-status">正在获取 BTC / ETH 价格...</p>
-        </div>
-
-        <div class="crypto-pill-wrap">
-          <article class="crypto-pill">
-            <div class="crypto-pill-top">
-              <span class="crypto-symbol">BTC</span>
-              <span id="btcChange" class="crypto-badge crypto-flat">--</span>
-            </div>
-            <strong id="btcPrice">--</strong>
-          </article>
-
-          <article class="crypto-pill">
-            <div class="crypto-pill-top">
-              <span class="crypto-symbol">ETH</span>
-              <span id="ethChange" class="crypto-badge crypto-flat">--</span>
-            </div>
-            <strong id="ethPrice">--</strong>
-          </article>
-        </div>
-      </section>
-
       <section class="news-strip" aria-label="世界新闻头条">
         <div class="news-strip-header">
           <div>
@@ -211,19 +186,19 @@
 
       </details>
 
-      <details id="foodExtra" class="home-extra food-extra" aria-label="国际食品价格">
+      <details id="foodExtra" class="home-extra food-extra" aria-label="全球价格与市场数据">
         <summary class="home-extra-summary">
-          <span>国际食品价格</span>
+          <span>全球价格与市场数据</span>
           <span class="home-extra-tip">点击展开</span>
         </summary>
 
         <section class="panel food-board">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Food Benchmarks</p>
-              <h2>国际食品价格</h2>
+              <p class="eyebrow">Global Data Board</p>
+              <h2>全球价格与市场数据</h2>
             </div>
-            <p id="foodStatus" class="panel-note">基于世界银行 Pink Sheet 的官方月度美元基准价。</p>
+            <p id="foodStatus" class="panel-note">把国际食品、贵金属、原油、数字货币和常看股市放在一起看。</p>
           </div>
 
           <div id="foodGrid" class="food-grid">
@@ -233,26 +208,56 @@
             </article>
           </div>
 
+          <div class="market-snapshot-head">
+            <div>
+              <p class="food-compare-label">常看市场</p>
+              <h3>数字货币与主要股市</h3>
+            </div>
+            <p class="panel-note">数字货币显示实时价格；股票和指数先做成中文关注清单，方便家里人一眼看懂。</p>
+          </div>
+
+          <div id="marketSnapshotGrid" class="market-snapshot-grid">
+            <article class="market-snapshot-card">
+              <p class="market-snapshot-type">加载中</p>
+              <h3>--</h3>
+            </article>
+          </div>
+
+          <div class="market-snapshot-head">
+            <div>
+              <p class="food-compare-label">汇率速览</p>
+              <h3>常看汇率</h3>
+            </div>
+            <p class="panel-note">统一按 1 美元换多少来显示，更方便快速比较。</p>
+          </div>
+
+          <div id="fxSnapshotGrid" class="fx-snapshot-grid">
+            <article class="fx-snapshot-card">
+              <p class="fx-snapshot-name">加载中</p>
+              <h3>--</h3>
+            </article>
+          </div>
+
           <div class="food-compare">
             <article class="food-compare-card">
               <p class="food-compare-label">国际基准价</p>
-              <h3>看全球行情</h3>
+              <h3>看大宗商品风向</h3>
               <p class="food-compare-copy">
-                适合比较全球价格趋势，口径更统一，全部按美元展示，更像“国际市场参考价”。
+                食品、金价、银价、油价这类数据，更适合用统一口径做横向比较，看的是全球市场参考水平。
               </p>
             </article>
 
             <article class="food-compare-card">
-              <p class="food-compare-label">超市零售价参考</p>
-              <h3>看本地买菜体感</h3>
+              <p class="food-compare-label">日常市场观察</p>
+              <h3>看风险偏好变化</h3>
               <p class="food-compare-copy">
-                会受到税费、城市、超市品牌、包装和促销影响，所以更贴近生活，但跨国家不一定能直接对比。
+                数字货币、主要股票和核心指数，更像情绪温度计，适合顺手看看最近大家更偏保守还是更偏冒险。
               </p>
             </article>
           </div>
 
           <p class="food-footnote">
-            说明：这里展示的是国际基准价，不是各国超市零售价。
+            说明：这里的大宗商品展示的是国际基准价，不是各国超市零售价；数字货币价格来自实时公开接口。
             <a
               href="https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Pink-Sheet-March-2026.pdf"
               target="_blank"

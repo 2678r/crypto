@@ -981,6 +981,169 @@ body.birthday-page .turnip-extra tbody tr:hover {
   gap: 12px;
 }
 
+.market-snapshot-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.market-snapshot-head h3 {
+  font-size: 1.35rem;
+}
+
+.market-snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fx-snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.market-snapshot-card {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(250, 252, 244, 0.94);
+  border: 1px solid var(--line);
+}
+
+.fx-snapshot-card {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(255, 251, 239, 0.94);
+  border: 1px solid var(--line);
+}
+
+.market-snapshot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.fx-snapshot-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.market-snapshot-type {
+  color: #7aa545;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.market-snapshot-name {
+  margin-top: 4px;
+  color: #6c5114;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.fx-snapshot-name {
+  color: #6c5114;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.fx-snapshot-code {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.fx-snapshot-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 244, 210, 0.92);
+  color: #8b5f0c;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.market-snapshot-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 248, 224, 0.92);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.market-snapshot-card h3 {
+  margin-top: 10px;
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+.fx-snapshot-card h3 {
+  margin-top: 10px;
+  font-size: 1.35rem;
+  color: var(--text);
+}
+
+.market-snapshot-copy {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.fx-snapshot-copy {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.mini-trend {
+  margin-top: 12px;
+}
+
+.mini-trend-chart {
+  width: 100%;
+  height: 72px;
+  display: block;
+}
+
+.mini-trend-line {
+  fill: none;
+  stroke: #7aa545;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mini-trend-labels {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.mini-trend-labels span:last-child {
+  text-align: right;
+}
+
 .food-card {
   padding: 16px 18px;
   border-radius: 22px;
@@ -1166,6 +1329,12 @@ textarea {
   gap: 4px;
 }
 
+.message-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .message-author {
   color: #6c5114;
   font-size: 1rem;
@@ -1184,6 +1353,19 @@ textarea {
   border-radius: 999px;
   background: rgba(255, 248, 224, 0.92);
   color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.message-delete-button {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid rgba(215, 107, 84, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 242, 236, 0.94);
+  color: #a34a38;
   font: inherit;
   font-size: 0.86rem;
   font-weight: 800;
@@ -1317,9 +1499,25 @@ body.birthday-page .message-board .ghost-button {
   border-color: rgba(168, 106, 62, 0.24);
 }
 
+body.birthday-page .message-board .message-delete-button {
+  background: rgba(255, 239, 233, 0.96);
+  color: #964730;
+  border-color: rgba(168, 106, 62, 0.24);
+}
+
 body.birthday-page .message-board .primary-button {
   background: linear-gradient(135deg, #bf6540 0%, #a94f2d 100%);
   color: #fff9f1;
+}
+
+body.birthday-page .market-snapshot-card {
+  background: rgba(255, 252, 242, 0.98);
+  border-color: var(--line);
+}
+
+body.birthday-page .fx-snapshot-card {
+  background: rgba(255, 252, 242, 0.98);
+  border-color: var(--line);
 }
 
 input {
@@ -1776,7 +1974,21 @@ tbody tr:hover {
     gap: 4px;
   }
 
+  .message-card-actions {
+    flex-wrap: wrap;
+  }
+
+  .food-grid,
+  .market-snapshot-grid,
+  .fx-snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+
   .message-reply-button {
+    align-self: flex-start;
+  }
+
+  .message-delete-button {
     align-self: flex-start;
   }
 
@@ -1787,6 +1999,11 @@ tbody tr:hover {
   }
 
   .inline-reply-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .market-snapshot-head {
     flex-direction: column;
     align-items: stretch;
   }
