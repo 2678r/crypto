@@ -1155,6 +1155,35 @@ input {
   appearance: none;
 }
 
+textarea {
+  width: 100%;
+  border: 0;
+  outline: none;
+  border-radius: 14px;
+  background: #fffdf3;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.6;
+  resize: vertical;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font: inherit;
+  font-weight: 800;
+  color: #fffaf0;
+  background: linear-gradient(135deg, #d76b54 0%, #c95b40 100%);
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(201, 91, 64, 0.2);
+}
+
 .mini-tip {
   padding: 16px 18px;
   color: var(--muted);
@@ -1167,6 +1196,60 @@ input {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.quick-entry-card {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 244, 215, 0.98) 0%, rgba(255, 250, 236, 0.94) 100%);
+  border: 1px solid var(--line);
+}
+
+.quick-entry-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.quick-entry-head h3 {
+  margin-top: 4px;
+  font-size: 1.18rem;
+}
+
+.quick-entry-note {
+  max-width: 240px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.quick-entry-field {
+  gap: 10px;
+}
+
+.quick-entry-field small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.quick-entry-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.quick-save-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  text-align: right;
 }
 
 .slot-card {
@@ -1670,6 +1753,7 @@ tbody tr:hover {
     margin-bottom: 14px;
   }
 
+  .quick-entry-card,
   .field-card,
   .mini-tip,
   .slot-card,
@@ -1677,10 +1761,23 @@ tbody tr:hover {
     border-radius: 18px;
   }
 
+  .quick-entry-card,
   .field-card,
   .slot-card,
   .forecast-box {
     padding: 14px;
+  }
+
+  .quick-entry-head,
+  .quick-entry-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .quick-entry-note,
+  .quick-save-hint {
+    max-width: none;
+    text-align: left;
   }
 
   input {

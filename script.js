@@ -79,6 +79,7 @@ const sampleWeek = {
 const defaultState = {
   buyPrice: "",
   prices: Object.fromEntries(slots.map((slot) => [slot.id, ""])),
+  lastUpdated: "",
 };
 
 const buyPriceInput = document.querySelector("#buyPriceInput");
@@ -87,6 +88,9 @@ const tableBody = document.querySelector("#tableBody");
 const statusText = document.querySelector("#statusText");
 const sampleButton = document.querySelector("#sampleButton");
 const resetButton = document.querySelector("#resetButton");
+const quickEntryInput = document.querySelector("#quickEntryInput");
+const quickEntryApply = document.querySelector("#quickEntryApply");
+const turnipSaveHint = document.querySelector("#turnipSaveHint");
 const cryptoStatus = document.querySelector("#cryptoStatus");
 const newsStatus = document.querySelector("#newsStatus");
 const newsList = document.querySelector("#newsList");
@@ -334,6 +338,7 @@ function loadState() {
     return {
       buyPrice: parsed.buyPrice ?? "",
       prices: { ...structuredClone(defaultState).prices, ...(parsed.prices ?? {}) },
+      lastUpdated: parsed.lastUpdated ?? "",
     };
   } catch {
     return structuredClone(defaultState);
@@ -398,6 +403,7 @@ async function createSharedMessage(entry) {
 }
 
 function saveState() {
+  state.lastUpdated = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -434,6 +440,44 @@ function createInputs() {
       persistAndRender("已更新本周价格记录。");
     });
   });
+}
+
+function parseQuickEntry(text) {
+  return text
+    .split(/[\s,，、/]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, slots.length)
+    .map((item) => {
+      if (item === "-" || item === "_" || item === "x") {
+        return "";
+      }
+
+      const value = Number(item);
+      return Number.isFinite(value) ? String(value) : "";
+    });
+}
+
+function formatSavedTime(value) {
+  if (!value) return "已自动保存到本机浏览器，下次打开会保留。";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "已自动保存到本机浏览器，下次打开会保留。";
+  }
+
+  return `已自动保存：${new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date)}`;
+}
+
+function serializeQuickEntry() {
+  return slots
+    .map((slot) => (state.prices[slot.id] === "" ? "-" : state.prices[slot.id]))
+    .join(" ");
 }
 
 function getRecordedEntries() {
@@ -575,6 +619,12 @@ function render() {
   const highest = entries.length ? Math.max(...entries.map((entry) => entry.value)) : null;
 
   buyPriceInput.value = state.buyPrice;
+  if (quickEntryInput) {
+    quickEntryInput.value = serializeQuickEntry();
+  }
+  if (turnipSaveHint) {
+    turnipSaveHint.textContent = formatSavedTime(state.lastUpdated);
+  }
 
   document.querySelector("#patternName").textContent = summary.pattern;
   document.querySelector("#patternDetail").textContent = summary.detail;
@@ -1373,6 +1423,20 @@ if (resetButton) {
     state = structuredClone(defaultState);
     createInputs();
     persistAndRender("本周记录已清空。");
+  });
+}
+
+if (quickEntryApply) {
+  quickEntryApply.addEventListener("click", () => {
+    const values = parseQuickEntry(quickEntryInput?.value || "");
+
+    slots.forEach((slot, index) => {
+      state.prices[slot.id] = values[index] ?? "";
+    });
+
+    persistAndRender(
+      values.some((value) => value !== "") ? "已按顺序快速填入价格。" : "没有识别到数字，已清空批量录入内容。",
+    );
   });
 }
 

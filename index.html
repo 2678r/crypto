@@ -318,6 +318,31 @@
             </div>
           </div>
 
+          <div class="quick-entry-card">
+            <div class="quick-entry-head">
+              <div>
+                <p class="eyebrow">Quick Input</p>
+                <h3>快速录入</h3>
+              </div>
+              <p class="quick-entry-note">支持按顺序一次输入，页面会自动保留记录。</p>
+            </div>
+
+            <label class="field-card quick-entry-field" for="quickEntryInput">
+              <span>批量输入价格</span>
+              <textarea
+                id="quickEntryInput"
+                rows="3"
+                placeholder="例如：88 83 79 74 128 176"
+              ></textarea>
+              <small>顺序按 周一AM、周一PM、周二AM... 到 周六PM，空着的不填就行。</small>
+            </label>
+
+            <div class="quick-entry-actions">
+              <button id="quickEntryApply" type="button">一键填入</button>
+              <p id="turnipSaveHint" class="quick-save-hint">已自动保存到本机浏览器，下次打开会保留。</p>
+            </div>
+          </div>
+
           <div id="priceGrid" class="price-grid"></div>
         </article>
 
