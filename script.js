@@ -1,5 +1,6 @@
 const STORAGE_KEY = "turnip-tracker-week";
 const MESSAGE_BOARD_KEY = "family-message-board-v1";
+const MESSAGE_PAYLOAD_PREFIX = "__FMB1__";
 const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_jyQ8EuXV2kRTcRKtauUpIw_0zQEDz2y";
 const SUPABASE_MESSAGE_TABLE = "family_messages";
@@ -116,9 +117,13 @@ const messageNameInput = document.querySelector("#messageName");
 const messageTextInput = document.querySelector("#messageText");
 const messageStatus = document.querySelector("#messageStatus");
 const messageList = document.querySelector("#messageList");
+const replyBanner = document.querySelector("#replyBanner");
+const replyBannerText = document.querySelector("#replyBannerText");
+const replyCancel = document.querySelector("#replyCancel");
 const foodStatus = document.querySelector("#foodStatus");
 const foodGrid = document.querySelector("#foodGrid");
 let messageBoardMode = "shared";
+let activeReply = null;
 
 const foodBenchmarks = [
   { name: "牛肉", benchmark: "全球基准", unit: "$/kg", latest: 8.12, previous: 7.97, period: "2026年2月" },
@@ -348,7 +353,9 @@ function loadState() {
 function loadMessageEntries() {
   const raw = loadJsonCache(MESSAGE_BOARD_KEY);
   if (!Array.isArray(raw)) return [];
-  return raw.filter((entry) => entry && entry.name && entry.text && entry.createdAt);
+  return raw
+    .map(normalizeMessageEntry)
+    .filter((entry) => entry && entry.name && entry.text && entry.createdAt);
 }
 
 function saveMessageEntries(entries) {
@@ -374,10 +381,10 @@ async function fetchSharedMessages() {
   if (!Array.isArray(data)) return [];
 
   return data.map((entry) => ({
+    ...decodeMessagePayload(entry.text || ""),
     name: entry.name || "家人",
-    text: entry.text || "",
     createdAt: entry.created_at || new Date().toISOString(),
-  }));
+  })).map(normalizeMessageEntry);
 }
 
 async function createSharedMessage(entry) {
@@ -391,7 +398,7 @@ async function createSharedMessage(entry) {
     },
     body: JSON.stringify({
       name: entry.name,
-      text: entry.text,
+      text: encodeMessagePayload(entry),
     }),
   });
 
@@ -652,6 +659,95 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function decodeMessagePayload(value) {
+  if (typeof value !== "string") {
+    return { text: "" };
+  }
+
+  if (!value.startsWith(MESSAGE_PAYLOAD_PREFIX)) {
+    return { text: value };
+  }
+
+  try {
+    const parsed = JSON.parse(value.slice(MESSAGE_PAYLOAD_PREFIX.length));
+    return {
+      text: typeof parsed.text === "string" ? parsed.text : "",
+      replyTo: parsed.replyTo && typeof parsed.replyTo === "object" ? parsed.replyTo : null,
+    };
+  } catch {
+    return { text: value };
+  }
+}
+
+function encodeMessagePayload(entry) {
+  return `${MESSAGE_PAYLOAD_PREFIX}${JSON.stringify({
+    text: entry.text,
+    replyTo: entry.replyTo || null,
+  })}`;
+}
+
+function normalizeMessageEntry(entry) {
+  if (!entry || !entry.name || !entry.createdAt) return null;
+
+  const decoded = decodeMessagePayload(entry.text);
+  const replySource = decoded.replyTo || entry.replyTo || null;
+  return {
+    name: String(entry.name).trim().slice(0, 20) || "家人",
+    text: String(decoded.text || "").trim().slice(0, 160),
+    createdAt: entry.createdAt,
+    replyTo: replySource
+      ? {
+          name: String(replySource.name || "").trim().slice(0, 20),
+          text: String(replySource.text || "").trim().slice(0, 80),
+          createdAt: String(replySource.createdAt || ""),
+        }
+      : null,
+  };
+}
+
+function buildReplyPreview(entry) {
+  if (!entry) return "";
+  const preview = entry.text.length > 30 ? `${entry.text.slice(0, 30)}...` : entry.text;
+  return `回复 ${entry.name}：${preview}`;
+}
+
+function setActiveReply(entry) {
+  activeReply = entry
+    ? {
+        name: entry.name,
+        text: entry.text,
+        createdAt: entry.createdAt,
+      }
+    : null;
+
+  if (replyBanner && replyBannerText) {
+    replyBanner.hidden = !activeReply;
+    replyBannerText.textContent = activeReply ? buildReplyPreview(activeReply) : "";
+  }
+}
+
+function wireReplyActions(entries) {
+  if (!messageList) return;
+
+  messageList.querySelectorAll("[data-reply-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.replyIndex);
+      const entry = entries[index];
+      if (!entry) return;
+      setActiveReply(entry);
+      if (messageTextInput) {
+        messageTextInput.focus();
+      }
+      setMessageStatus(`正在回复 ${entry.name}，发布后会显示在留言下方。`);
+    });
+  });
+}
+
+function clearReply() {
+  setActiveReply(null);
+  setMessageStatus("已取消回复，现在会发布成一条新的留言。");
+}
+
 function formatMessageTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -679,18 +775,27 @@ function renderMessageBoard(entries = loadMessageEntries()) {
   }
 
   messageList.innerHTML = entries
-    .slice()
-    .reverse()
-    .map((entry) => `
+    .map((entry, index) => `
       <article class="message-card">
         <div class="message-card-top">
-          <p class="message-author">${escapeHtml(entry.name)}</p>
-          <time class="message-time">${escapeHtml(formatMessageTime(entry.createdAt))}</time>
+          <div class="message-card-meta">
+            <p class="message-author">${escapeHtml(entry.name)}</p>
+            <time class="message-time">${escapeHtml(formatMessageTime(entry.createdAt))}</time>
+          </div>
+          <button class="message-reply-button" type="button" data-reply-index="${index}">回复</button>
         </div>
+        ${entry.replyTo ? `
+          <div class="message-reply-context">
+            <p class="message-reply-name">回复 ${escapeHtml(entry.replyTo.name || "家人")}</p>
+            <p class="message-reply-quote">${escapeHtml(entry.replyTo.text || "")}</p>
+          </div>
+        ` : ""}
         <p class="message-copy">${escapeHtml(entry.text)}</p>
       </article>
     `)
     .join("");
+
+  wireReplyActions(entries);
 }
 
 async function syncMessageBoard(options = {}) {
@@ -731,6 +836,7 @@ async function handleMessageSubmit(event) {
     name,
     text,
     createdAt: new Date().toISOString(),
+    replyTo: activeReply,
   };
 
   if (messageBoardMode === "shared") {
@@ -746,6 +852,7 @@ async function handleMessageSubmit(event) {
       setMessageStatus("共享发布失败，这条留言先保存在这台设备里了。");
       messageNameInput.value = name;
       messageTextInput.value = "";
+      setActiveReply(null);
       return;
     }
   } else {
@@ -758,6 +865,7 @@ async function handleMessageSubmit(event) {
 
   messageNameInput.value = name;
   messageTextInput.value = "";
+  setActiveReply(null);
   if (messageBoardMode === "shared") {
     setMessageStatus("发布成功，这条留言全家人现在都能看到了。");
   }
@@ -1442,6 +1550,10 @@ if (quickEntryApply) {
 
 if (messageForm) {
   messageForm.addEventListener("submit", handleMessageSubmit);
+}
+
+if (replyCancel) {
+  replyCancel.addEventListener("click", clearReply);
 }
 
 createInputs();

@@ -840,6 +840,64 @@ body.birthday-page .home-extra-summary {
   margin-top: 14px;
 }
 
+body.birthday-page .turnip-extra {
+  --turnip-panel: rgba(255, 249, 236, 0.94);
+  --turnip-panel-strong: rgba(255, 252, 242, 0.98);
+  --turnip-line: rgba(168, 106, 62, 0.18);
+  --turnip-text: #5c3416;
+  --turnip-muted: #8a5a36;
+}
+
+body.birthday-page .turnip-extra > .metrics-grid .metric-card,
+body.birthday-page .turnip-extra > .content-grid .panel,
+body.birthday-page .turnip-extra > .board {
+  background: var(--turnip-panel);
+  border-color: var(--turnip-line);
+  color: var(--turnip-text);
+  box-shadow: 0 20px 44px rgba(88, 22, 16, 0.16);
+}
+
+body.birthday-page .turnip-extra .metric-label,
+body.birthday-page .turnip-extra .metric-detail,
+body.birthday-page .turnip-extra .panel-note,
+body.birthday-page .turnip-extra .forecast-copy,
+body.birthday-page .turnip-extra .mini-tip,
+body.birthday-page .turnip-extra .slot-card small,
+body.birthday-page .turnip-extra .quick-entry-note,
+body.birthday-page .turnip-extra .quick-save-hint,
+body.birthday-page .turnip-extra .quick-entry-field small,
+body.birthday-page .turnip-extra th {
+  color: var(--turnip-muted);
+}
+
+body.birthday-page .turnip-extra h2,
+body.birthday-page .turnip-extra h3,
+body.birthday-page .turnip-extra td,
+body.birthday-page .turnip-extra .slot-card,
+body.birthday-page .turnip-extra .field-card span,
+body.birthday-page .turnip-extra .forecast-label {
+  color: var(--turnip-text);
+}
+
+body.birthday-page .turnip-extra .field-card,
+body.birthday-page .turnip-extra .mini-tip,
+body.birthday-page .turnip-extra .quick-entry-card,
+body.birthday-page .turnip-extra .slot-card,
+body.birthday-page .turnip-extra .forecast-box {
+  background: var(--turnip-panel-strong);
+  border-color: var(--turnip-line);
+}
+
+body.birthday-page .turnip-extra input,
+body.birthday-page .turnip-extra textarea {
+  background: #fffdf6;
+  color: var(--turnip-text);
+}
+
+body.birthday-page .turnip-extra tbody tr:hover {
+  background: rgba(168, 106, 62, 0.08);
+}
+
 .metrics-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -1047,6 +1105,33 @@ body.birthday-page .home-extra-summary {
   margin-bottom: 16px;
 }
 
+.reply-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 248, 224, 0.94);
+  border: 1px solid var(--line);
+}
+
+.reply-banner-label {
+  color: #7aa545;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.reply-banner-text {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
 .message-field {
   height: 100%;
 }
@@ -1098,9 +1183,14 @@ textarea {
 .message-card-top {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 8px;
+}
+
+.message-card-meta {
+  display: grid;
+  gap: 4px;
 }
 
 .message-author {
@@ -1112,6 +1202,42 @@ textarea {
 .message-time {
   color: var(--muted);
   font-size: 0.84rem;
+}
+
+.message-reply-button {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid rgba(122, 179, 93, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 248, 224, 0.92);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.message-reply-context {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-left: 3px solid rgba(122, 179, 93, 0.38);
+  border-radius: 14px;
+  background: rgba(248, 252, 244, 0.9);
+}
+
+.message-reply-name {
+  color: #7aa545;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.message-reply-quote {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .message-copy {
@@ -1592,6 +1718,15 @@ tbody tr:hover {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+
+  .reply-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .message-reply-button {
+    align-self: flex-start;
   }
 
   .news-strip-header {

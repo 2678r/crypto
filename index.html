@@ -81,6 +81,14 @@
         </div>
 
         <form id="messageForm" class="message-form">
+          <div id="replyBanner" class="reply-banner" hidden>
+            <div>
+              <p class="reply-banner-label">正在回复</p>
+              <p id="replyBannerText" class="reply-banner-text">回复对象</p>
+            </div>
+            <button id="replyCancel" class="ghost-button" type="button">取消回复</button>
+          </div>
+
           <label class="field-card message-field">
             <span>留言人</span>
             <input
