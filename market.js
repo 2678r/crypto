@@ -64,6 +64,54 @@ const economicData = {
     population: "14.2 亿",
     perCapita: "12,556 美元",
   },
+  us: {
+    gdp: "27.4 万亿美元",
+    growth: "2.5%",
+    population: "3.4 亿",
+    perCapita: "80,412 美元",
+  },
+  canada: {
+    gdp: "2.1 万亿美元",
+    growth: "1.5%",
+    population: "4100 万",
+    perCapita: "51,220 美元",
+  },
+  germany: {
+    gdp: "4.31 万亿美元",
+    growth: "0.3%",
+    population: "8350 万",
+    perCapita: "51,562 美元",
+  },
+  japan: {
+    gdp: "4.2 万亿美元",
+    growth: "1.9%",
+    population: "1.2 亿",
+    perCapita: "35,000 美元",
+  },
+  uk: {
+    gdp: "3.33 万亿美元",
+    growth: "0.5%",
+    population: "6740 万",
+    perCapita: "49,403 美元",
+  },
+  spain: {
+    gdp: "1.39 万亿美元",
+    growth: "1.9%",
+    population: "4700 万",
+    perCapita: "29,574 美元",
+  },
+  italy: {
+    gdp: "2.01 万亿美元",
+    growth: "0.7%",
+    population: "5880 万",
+    perCapita: "34,159 美元",
+  },
+  greece: {
+    gdp: "2191 亿美元",
+    growth: "2.1%",
+    population: "1070 万",
+    perCapita: "20,477 美元",
+  },
 };
 
 const cryptoStatus = document.querySelector("#cryptoStatus");
@@ -372,15 +420,30 @@ function updateClocks() {
 }
 
 function loadEconomyData() {
-  document.querySelector("#turkeyGdp").textContent = economicData.turkey.gdp;
-  document.querySelector("#turkeyGrowth").textContent = economicData.turkey.growth;
-  document.querySelector("#turkeyPopulation").textContent = economicData.turkey.population;
-  document.querySelector("#turkeyPerCapita").textContent = economicData.turkey.perCapita;
+  const countries = ['turkey', 'china', 'us', 'canada', 'germany', 'japan', 'uk', 'spain', 'italy', 'greece'];
+  const countrySelectors = {
+    turkey: { gdp: '#turkeyGdp', growth: '#turkeyGrowth', population: '#turkeyPopulation', perCapita: '#turkeyPerCapita' },
+    china: { gdp: '#chinaGdp', growth: '#chinaGrowth', population: '#chinaPopulation', perCapita: '#chinaPerCapita' },
+    us: { gdp: '#usGdp', growth: '#usGrowth', population: '#usPopulation', perCapita: '#usPerCapita' },
+    canada: { gdp: '#canadaGdp', growth: '#canadaGrowth', population: '#canadaPopulation', perCapita: '#canadaPerCapita' },
+    germany: { gdp: '#germanyGdp', growth: '#germanyGrowth', population: '#germanyPopulation', perCapita: '#germanyPerCapita' },
+    japan: { gdp: '#japanGdp', growth: '#japanGrowth', population: '#japanPopulation', perCapita: '#japanPerCapita' },
+    uk: { gdp: '#ukGdp', growth: '#ukGrowth', population: '#ukPopulation', perCapita: '#ukPerCapita' },
+    spain: { gdp: '#spainGdp', growth: '#spainGrowth', population: '#spainPopulation', perCapita: '#spainPerCapita' },
+    italy: { gdp: '#italyGdp', growth: '#italyGrowth', population: '#italyPopulation', perCapita: '#italyPerCapita' },
+    greece: { gdp: '#greeceGdp', growth: '#greeceGrowth', population: '#greecePopulation', perCapita: '#greecePerCapita' },
+  };
   
-  document.querySelector("#chinaGdp").textContent = economicData.china.gdp;
-  document.querySelector("#chinaGrowth").textContent = economicData.china.growth;
-  document.querySelector("#chinaPopulation").textContent = economicData.china.population;
-  document.querySelector("#chinaPerCapita").textContent = economicData.china.perCapita;
+  for (const country of countries) {
+    const data = economicData[country];
+    const selectors = countrySelectors[country];
+    if (data && selectors) {
+      document.querySelector(selectors.gdp).textContent = data.gdp;
+      document.querySelector(selectors.growth).textContent = data.growth;
+      document.querySelector(selectors.population).textContent = data.population;
+      document.querySelector(selectors.perCapita).textContent = data.perCapita;
+    }
+  }
 }
 
 renderFoodBoard();
