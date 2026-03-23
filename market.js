@@ -514,3 +514,5 @@ document.addEventListener("visibilitychange", () => {
     loadFuelPrices();
   }
 });
+
+document.querySelector("#refreshFuelBtn").addEventListener("click", loadFuelPrices);
