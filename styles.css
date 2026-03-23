@@ -1240,6 +1240,29 @@ textarea {
   word-break: break-word;
 }
 
+.message-replies {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(122, 179, 93, 0.24);
+}
+
+.message-reply-item {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(248, 252, 244, 0.92);
+  border: 1px solid rgba(122, 179, 93, 0.16);
+}
+
+.message-reply-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
 .message-copy {
   color: var(--text);
   font-size: 0.98rem;
@@ -1727,6 +1750,12 @@ tbody tr:hover {
 
   .message-reply-button {
     align-self: flex-start;
+  }
+
+  .message-reply-item-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .news-strip-header {

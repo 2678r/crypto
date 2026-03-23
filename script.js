@@ -729,10 +729,14 @@ function setActiveReply(entry) {
 function wireReplyActions(entries) {
   if (!messageList) return;
 
-  messageList.querySelectorAll("[data-reply-index]").forEach((button) => {
+  messageList.querySelectorAll("[data-reply-name]").forEach((button) => {
     button.addEventListener("click", () => {
-      const index = Number(button.dataset.replyIndex);
-      const entry = entries[index];
+      const entry = entries.find(
+        (candidate) =>
+          candidate.name === button.dataset.replyName &&
+          candidate.text === button.dataset.replyText &&
+          candidate.createdAt === button.dataset.replyCreatedAt,
+      );
       if (!entry) return;
       setActiveReply(entry);
       if (messageTextInput) {
@@ -746,6 +750,32 @@ function wireReplyActions(entries) {
 function clearReply() {
   setActiveReply(null);
   setMessageStatus("已取消回复，现在会发布成一条新的留言。");
+}
+
+function isSameMessage(left, right) {
+  if (!left || !right) return false;
+  return left.name === right.name && left.text === right.text && left.createdAt === right.createdAt;
+}
+
+function buildThreadedMessages(entries) {
+  const parents = [];
+
+  entries.forEach((entry) => {
+    if (!entry.replyTo) {
+      parents.push({ ...entry, replies: [] });
+      return;
+    }
+
+    const parent = parents.find((candidate) => isSameMessage(candidate, entry.replyTo));
+    if (parent) {
+      parent.replies.push(entry);
+      return;
+    }
+
+    parents.push({ ...entry, replies: [] });
+  });
+
+  return parents;
 }
 
 function formatMessageTime(value) {
@@ -774,23 +804,51 @@ function renderMessageBoard(entries = loadMessageEntries()) {
     return;
   }
 
-  messageList.innerHTML = entries
-    .map((entry, index) => `
+  const threadedEntries = buildThreadedMessages(entries);
+
+  messageList.innerHTML = threadedEntries
+    .map((entry) => `
       <article class="message-card">
         <div class="message-card-top">
           <div class="message-card-meta">
             <p class="message-author">${escapeHtml(entry.name)}</p>
             <time class="message-time">${escapeHtml(formatMessageTime(entry.createdAt))}</time>
           </div>
-          <button class="message-reply-button" type="button" data-reply-index="${index}">回复</button>
+          <button
+            class="message-reply-button"
+            type="button"
+            data-reply-name="${escapeHtml(entry.name)}"
+            data-reply-text="${escapeHtml(entry.text)}"
+            data-reply-created-at="${escapeHtml(entry.createdAt)}"
+          >回复</button>
         </div>
-        ${entry.replyTo ? `
-          <div class="message-reply-context">
-            <p class="message-reply-name">回复 ${escapeHtml(entry.replyTo.name || "家人")}</p>
-            <p class="message-reply-quote">${escapeHtml(entry.replyTo.text || "")}</p>
+        <p class="message-copy">${escapeHtml(entry.text)}</p>
+        ${entry.replies.length ? `
+          <div class="message-replies">
+            ${entry.replies
+              .map(
+                (reply) => `
+                  <article class="message-reply-item">
+                    <div class="message-reply-item-top">
+                      <div class="message-card-meta">
+                        <p class="message-author">${escapeHtml(reply.name)}</p>
+                        <time class="message-time">${escapeHtml(formatMessageTime(reply.createdAt))}</time>
+                      </div>
+                      <button
+                        class="message-reply-button"
+                        type="button"
+                        data-reply-name="${escapeHtml(reply.name)}"
+                        data-reply-text="${escapeHtml(reply.text)}"
+                        data-reply-created-at="${escapeHtml(reply.createdAt)}"
+                      >回复</button>
+                    </div>
+                    <p class="message-copy">${escapeHtml(reply.text)}</p>
+                  </article>
+                `,
+              )
+              .join("")}
           </div>
         ` : ""}
-        <p class="message-copy">${escapeHtml(entry.text)}</p>
       </article>
     `)
     .join("");
