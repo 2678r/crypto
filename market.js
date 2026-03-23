@@ -8,6 +8,12 @@ const CRYPTO_CACHE_KEY = "market-crypto-cache-v1";
 const CRYPTO_CACHE_MAX_AGE_MS = 12 * 60 * 60_000;
 const FETCH_TIMEOUT_MS = 8_000;
 
+const FUEL_API_URL_GASOLINE = "https://api.collectapi.com/gasPrice/turkeyGasoline";
+const FUEL_API_URL_DIESEL = "https://api.collectapi.com/gasPrice/turkeyDiesel";
+const FUEL_API_KEY = "YOUR_COLLECTAPI_KEY"; // Replace with your CollectAPI key
+const FUEL_CACHE_KEY = "market-fuel-cache-v1";
+const FUEL_CACHE_MAX_AGE_MS = 4 * 60 * 60_000;
+
 const NEWS_FEEDS = [
   {
     source: "Reuters",
@@ -56,6 +62,7 @@ const newsStatus = document.querySelector("#newsStatus");
 const newsList = document.querySelector("#newsList");
 const foodStatus = document.querySelector("#foodStatus");
 const foodGrid = document.querySelector("#foodGrid");
+const fuelStatus = document.querySelector("#fuelStatus");
 
 function escapeHtml(value) {
   return String(value)
@@ -72,6 +79,15 @@ function formatUsd(value) {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: value >= 1000 ? 0 : 2,
+  }).format(value);
+}
+
+function formatTry(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    maximumFractionDigits: 2,
   }).format(value);
 }
 
@@ -152,6 +168,117 @@ function saveCryptoCache(payload) {
     savedAt: Date.now(),
     payload,
   });
+}
+
+function normalizeFuelPayload(payload) {
+  if (!payload?.success || !Array.isArray(payload?.result)) return null;
+  const items = payload.result;
+  if (items.length === 0) return null;
+  let totalGasoline = 0;
+  let totalDiesel = 0;
+  let count = 0;
+  for (const item of items) {
+    const gas = Number(item.gasoline);
+    const die = Number(item.diesel);
+    if (Number.isFinite(gas) && Number.isFinite(die)) {
+      totalGasoline += gas;
+      totalDiesel += die;
+      count++;
+    }
+  }
+  if (count === 0) return null;
+  return {
+    gasoline: totalGasoline / count,
+    diesel: totalDiesel / count,
+  };
+}
+
+function loadFuelCache() {
+  const cached = loadJsonCache(FUEL_CACHE_KEY);
+  if (!cached || !cached.savedAt) return null;
+  const age = Date.now() - Number(cached.savedAt);
+  if (!Number.isFinite(age) || age < 0 || age > FUEL_CACHE_MAX_AGE_MS) {
+    return null;
+  }
+  return cached.payload;
+}
+
+function saveFuelCache(payload) {
+  saveJsonCache(FUEL_CACHE_KEY, {
+    savedAt: Date.now(),
+    payload,
+  });
+}
+
+function renderFuelCard(priceId, changeId, price, change) {
+  const priceNode = document.querySelector(priceId);
+  const changeNode = document.querySelector(changeId);
+  if (!priceNode || !changeNode) return;
+  priceNode.textContent = formatTry(price);
+  changeNode.textContent = formatPercent(change);
+  changeNode.className = "delta";
+  if (change > 0.15) {
+    changeNode.classList.add("up");
+  } else if (change < -0.15) {
+    changeNode.classList.add("down");
+  } else {
+    changeNode.classList.add("flat");
+  }
+}
+
+function applyFuelPayload(payload) {
+  const normalized = normalizeFuelPayload(payload);
+  if (!normalized) return false;
+  renderFuelCard("#gasolinePrice", "#gasolineChange", normalized.gasoline, 0);
+  renderFuelCard("#dieselPrice", "#dieselChange", normalized.diesel, 0);
+  saveFuelCache(normalized);
+  return true;
+}
+
+async function fetchFuelPayload() {
+  const [gasResponse, dieResponse] = await Promise.all([
+    fetchJsonWithTimeout(FUEL_API_URL_GASOLINE, {
+      headers: {
+        'authorization': `apikey ${FUEL_API_KEY}`,
+        'content-type': 'application/json',
+      },
+    }),
+    fetchJsonWithTimeout(FUEL_API_URL_DIESEL, {
+      headers: {
+        'authorization': `apikey ${FUEL_API_KEY}`,
+        'content-type': 'application/json',
+      },
+    }),
+  ]);
+  if (!gasResponse.ok || !dieResponse.ok) throw new Error("fuel-fetch-failed");
+  const gasJson = await gasResponse.json();
+  const dieJson = await dieResponse.json();
+  const result = {
+    success: gasJson.success && dieJson.success,
+    result: gasJson.result.map((item, index) => ({
+      ...item,
+      diesel: dieJson.result[index]?.diesel || item.diesel,
+    })),
+  };
+  return result;
+}
+
+async function loadFuelPrices() {
+  fuelStatus.textContent = "正在获取实时价格...";
+  try {
+    const payload = await fetchFuelPayload();
+    applyFuelPayload(payload);
+    fuelStatus.textContent = "CollectAPI 实时土耳其里拉价格。";
+  } catch {
+    const cachedPayload = loadFuelCache();
+    if (cachedPayload && applyFuelPayload({ success: true, result: [{ gasoline: cachedPayload.gasoline, diesel: cachedPayload.diesel }] })) {
+      fuelStatus.textContent = "实时接口暂时不稳定，先显示最近一次成功缓存的价格。";
+      return;
+    }
+    fuelStatus.textContent = "实时源暂时不可用，稍后会自动重试。";
+    renderFuelCard("#gasolinePrice", "#gasolineChange", NaN, NaN);
+    renderFuelCard("#dieselPrice", "#dieselChange", NaN, NaN);
+  }
 }
 
 function renderCryptoCard(priceId, changeId, price, change) {
@@ -353,12 +480,15 @@ renderFoodBoard();
 updateClocks();
 loadCryptoPrices();
 loadNewsHeadlines();
+loadFuelPrices();
 
 window.setInterval(updateClocks, 1000);
 window.setInterval(loadCryptoPrices, 60_000);
 window.setInterval(loadNewsHeadlines, 10 * 60_000);
+window.setInterval(loadFuelPrices, 4 * 60 * 60_000);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     loadCryptoPrices();
+    loadFuelPrices();
   }
 });
