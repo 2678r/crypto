@@ -1223,6 +1223,10 @@ body.birthday-page .turnip-extra tbody tr:hover {
   margin-bottom: 16px;
 }
 
+.mindfulness-board {
+  margin-bottom: 16px;
+}
+
 .food-board {
   margin-bottom: 16px;
 }
@@ -1558,6 +1562,86 @@ textarea {
 .message-list {
   display: grid;
   gap: 12px;
+}
+
+.mindfulness-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mindfulness-card {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(250, 252, 244, 0.94);
+  border: 1px solid var(--line);
+}
+
+.mindfulness-step {
+  color: #7aa545;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mindfulness-card h3 {
+  margin-top: 8px;
+  color: #6c5114;
+  font-size: 1.18rem;
+}
+
+.mindfulness-card p:last-child {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-size: 0.94rem;
+}
+
+.mindfulness-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.mindfulness-note {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 249, 230, 0.92);
+  border: 1px solid var(--line);
+}
+
+.mindfulness-label {
+  color: #8b5f0c;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mindfulness-note p:last-child {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.mindfulness-source {
+  max-width: 26rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.mindfulness-source a {
+  color: #6a8f2f;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.mindfulness-source a:hover {
+  text-decoration: underline;
 }
 
 .message-card {
@@ -2239,6 +2323,10 @@ tbody tr:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .mindfulness-grid {
+    grid-template-columns: 1fr;
+  }
+
   .fortune-wrapper {
     align-self: center;
   }
@@ -2382,6 +2470,11 @@ tbody tr:hover {
 
   .message-card-actions {
     flex-wrap: wrap;
+  }
+
+  .mindfulness-footer {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .food-grid,
