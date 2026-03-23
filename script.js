@@ -3,6 +3,7 @@ const MESSAGE_BOARD_KEY = "family-message-board-v1";
 const MESSAGE_HIDDEN_KEY = "family-message-hidden-v1";
 const MESSAGE_PAYLOAD_PREFIX = "__FMB1__";
 const MESSAGE_DEFAULT_VISIBLE_COUNT = 5;
+const CRYPTO_CACHE_KEY = "family-crypto-cache-v1";
 const DEFAULT_USD_TO_CNY_RATE = 6.87365;
 const FX_API_URL = "https://api.frankfurter.app/latest?from=USD&to=CNY";
 const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
@@ -14,6 +15,13 @@ const BIRTHDAY_TODAY_CACHE_KEY = "family-lunar-upcoming-cache-v3";
 const BIRTHDAY_PREVIEW_MODE = false;
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
+const CRYPTO_FALLBACK_SPOT_URLS = {
+  bitcoin: "https://api.coinbase.com/v2/prices/BTC-USD/spot",
+  ethereum: "https://api.coinbase.com/v2/prices/ETH-USD/spot",
+};
+const CRYPTO_REFRESH_MS = 60_000;
+const CRYPTO_CACHE_MAX_AGE_MS = 12 * 60 * 60_000;
+const FETCH_TIMEOUT_MS = 8_000;
 const NEWS_FEEDS = [
   {
     source: "Reuters",
@@ -144,9 +152,9 @@ const foodBenchmarks = [
   { name: "大米", benchmark: "泰国 5% 碎米", unitLabel: "人民币/公斤", latest: 409.0 / 1000, previous: 408.0 / 1000, period: "2026年2月", history: [0.395, 0.399, 0.404, 0.406, 0.408, 0.409] },
   { name: "小麦", benchmark: "美国 HRW", unitLabel: "人民币/公斤", latest: 257.6 / 1000, previous: 249.9 / 1000, period: "2026年2月", history: [0.232, 0.238, 0.241, 0.246, 0.2499, 0.2576] },
   { name: "食用油", benchmark: "棕榈油", unitLabel: "人民币/公斤", latest: 1042 / 1000, previous: 1005 / 1000, period: "2026年2月", history: [0.92, 0.95, 0.97, 0.99, 1.005, 1.042] },
-  { name: "国际油价", benchmark: "原油均价", unitLabel: "人民币/升", latest: 68.0 / 159, previous: 63.7 / 159, period: "2026年2月", history: [0.48, 0.46, 0.44, 0.42, 63.7 / 159, 68.0 / 159] },
-  { name: "金价", benchmark: "黄金现货参考", unitLabel: "人民币/克", latest: 2931 / 31.1035, previous: 2816 / 31.1035, period: "2026年2月", history: [84.3, 86.1, 87.8, 89.4, 2816 / 31.1035, 2931 / 31.1035] },
-  { name: "银价", benchmark: "白银现货参考", unitLabel: "人民币/克", latest: 32.1 / 31.1035, previous: 31.6 / 31.1035, period: "2026年2月", history: [0.93, 0.95, 0.97, 0.99, 31.6 / 31.1035, 32.1 / 31.1035] },
+  { name: "国际油价", benchmark: "原油月均价", unitLabel: "人民币/升", latest: 68.0 / 159, previous: 63.7 / 159, period: "2026年2月", history: [0.48, 0.46, 0.44, 0.42, 63.7 / 159, 68.0 / 159] },
+  { name: "金价", benchmark: "黄金现货月均价", unitLabel: "人民币/克", latest: 2931 / 31.1035, previous: 2816 / 31.1035, period: "2026年2月", history: [84.3, 86.1, 87.8, 89.4, 2816 / 31.1035, 2931 / 31.1035] },
+  { name: "银价", benchmark: "白银现货月均价", unitLabel: "人民币/克", latest: 32.1 / 31.1035, previous: 31.6 / 31.1035, period: "2026年2月", history: [0.93, 0.95, 0.97, 0.99, 31.6 / 31.1035, 32.1 / 31.1035] },
   { name: "糖", benchmark: "世界糖价", unitLabel: "人民币/公斤", latest: 0.31, previous: 0.32, period: "2026年2月", history: [0.34, 0.335, 0.329, 0.324, 0.32, 0.31] },
 ];
 
@@ -1301,6 +1309,150 @@ function saveJsonCache(key, value) {
   }
 }
 
+async function fetchJsonWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+function normalizeCryptoPayload(payload) {
+  const btcUsd = Number(payload?.bitcoin?.usd);
+  const ethUsd = Number(payload?.ethereum?.usd);
+  const btcChange = Number(payload?.bitcoin?.usd_24h_change);
+  const ethChange = Number(payload?.ethereum?.usd_24h_change);
+
+  if (!Number.isFinite(btcUsd) || !Number.isFinite(ethUsd)) {
+    return null;
+  }
+
+  return {
+    bitcoin: {
+      usd: btcUsd,
+      usd_24h_change: Number.isFinite(btcChange) ? btcChange : null,
+    },
+    ethereum: {
+      usd: ethUsd,
+      usd_24h_change: Number.isFinite(ethChange) ? ethChange : null,
+    },
+  };
+}
+
+function loadCryptoCache() {
+  const cached = loadJsonCache(CRYPTO_CACHE_KEY);
+  if (!cached || !cached.savedAt) return null;
+
+  const age = Date.now() - Number(cached.savedAt);
+  if (!Number.isFinite(age) || age < 0 || age > CRYPTO_CACHE_MAX_AGE_MS) {
+    return null;
+  }
+
+  return normalizeCryptoPayload(cached.payload);
+}
+
+function saveCryptoCache(payload) {
+  saveJsonCache(CRYPTO_CACHE_KEY, {
+    savedAt: Date.now(),
+    payload,
+  });
+}
+
+function applyCryptoPayload(payload) {
+  const normalized = normalizeCryptoPayload(payload);
+  if (!normalized) return false;
+
+  if (document.querySelector("#btcPrice") && document.querySelector("#btcChange")) {
+    renderCryptoCard(
+      "#btcPrice",
+      "#btcChange",
+      normalized.bitcoin.usd,
+      normalized.bitcoin.usd_24h_change,
+    );
+  }
+  if (document.querySelector("#ethPrice") && document.querySelector("#ethChange")) {
+    renderCryptoCard(
+      "#ethPrice",
+      "#ethChange",
+      normalized.ethereum.usd,
+      normalized.ethereum.usd_24h_change,
+    );
+  }
+  renderCryptoCard(
+    "#boardBtcPrice",
+    "#boardBtcChange",
+    normalized.bitcoin.usd,
+    normalized.bitcoin.usd_24h_change,
+  );
+  renderCryptoCard(
+    "#boardEthPrice",
+    "#boardEthChange",
+    normalized.ethereum.usd,
+    normalized.ethereum.usd_24h_change,
+  );
+
+  updateTrendTail(marketWatchList, (item) => item.code === "BTC", normalized.bitcoin.usd);
+  updateTrendTail(marketWatchList, (item) => item.code === "ETH", normalized.ethereum.usd);
+  renderMarketSnapshotBoard();
+  renderFortuneBtc(normalized.bitcoin.usd);
+  saveCryptoCache(normalized);
+  return true;
+}
+
+async function fetchCoinGeckoCryptoPayload() {
+  const response = await fetchJsonWithTimeout(CRYPTO_API_URL, {
+    headers: { accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return normalizeCryptoPayload(await response.json());
+}
+
+async function fetchFallbackCryptoPayload(previousPayload = null) {
+  const [btcResponse, ethResponse] = await Promise.all([
+    fetchJsonWithTimeout(CRYPTO_FALLBACK_SPOT_URLS.bitcoin, {
+      headers: { accept: "application/json" },
+    }),
+    fetchJsonWithTimeout(CRYPTO_FALLBACK_SPOT_URLS.ethereum, {
+      headers: { accept: "application/json" },
+    }),
+  ]);
+
+  if (!btcResponse.ok || !ethResponse.ok) {
+    throw new Error("crypto-fallback-fetch-failed");
+  }
+
+  const btcJson = await btcResponse.json();
+  const ethJson = await ethResponse.json();
+  const btcUsd = Number(btcJson?.data?.amount);
+  const ethUsd = Number(ethJson?.data?.amount);
+
+  if (!Number.isFinite(btcUsd) || !Number.isFinite(ethUsd)) {
+    throw new Error("crypto-fallback-invalid");
+  }
+
+  return {
+    bitcoin: {
+      usd: btcUsd,
+      usd_24h_change: Number(previousPayload?.bitcoin?.usd_24h_change),
+    },
+    ethereum: {
+      usd: ethUsd,
+      usd_24h_change: Number(previousPayload?.ethereum?.usd_24h_change),
+    },
+  };
+}
+
 function parseBirthDate(value) {
   const digits = value.replaceAll("-", "");
   if (digits.length !== 8) return null;
@@ -1694,7 +1846,7 @@ function buildSparkline(values) {
 function renderFoodBoard() {
   if (!foodGrid || !foodStatus) return;
 
-  foodStatus.textContent = `大宗商品按国际基准价换算成人民币显示，当前参考汇率 1 美元 = ${getUsdToCnyRate().toFixed(4)} 人民币。`;
+  foodStatus.textContent = `这里显示的是国际月均基准价换算值，不是各地实时零售价；当前参考汇率 1 美元 = ${getUsdToCnyRate().toFixed(4)} 人民币。`;
   foodGrid.innerHTML = foodBenchmarks
     .map((item) => {
       const delta = formatFoodDelta(item.latest, item.previous);
@@ -1708,7 +1860,7 @@ function renderFoodBoard() {
             <span class="${delta.className}">${delta.label}</span>
           </div>
           <h3>${escapeHtml(formatFoodValue(item.latest, item.unitLabel))}</h3>
-          <p class="food-period">${escapeHtml(item.period)} 月均价</p>
+          <p class="food-period">${escapeHtml(item.period)} 国际月均价</p>
           ${buildSparkline(item.history)}
         </article>
       `;
@@ -1749,7 +1901,7 @@ function updateTrendTail(list, matcher, nextValue) {
 
 async function loadExchangeRate() {
   try {
-    const response = await fetch(`${FX_API_URL}&to=CNY,GBP,JPY,TRY,HKD,EUR`, {
+    const response = await fetchJsonWithTimeout(`${FX_API_URL}&to=CNY,GBP,JPY,TRY,HKD,EUR`, {
       headers: { accept: "application/json" },
     });
 
@@ -1922,55 +2074,32 @@ async function loadCryptoPrices() {
   }
 
   try {
-    const response = await fetch(CRYPTO_API_URL, {
-      headers: { accept: "application/json" },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (document.querySelector("#btcPrice") && document.querySelector("#btcChange")) {
-      renderCryptoCard(
-        "#btcPrice",
-        "#btcChange",
-        data.bitcoin?.usd,
-        data.bitcoin?.usd_24h_change,
-      );
-    }
-    if (document.querySelector("#ethPrice") && document.querySelector("#ethChange")) {
-      renderCryptoCard(
-        "#ethPrice",
-        "#ethChange",
-        data.ethereum?.usd,
-        data.ethereum?.usd_24h_change,
-      );
-    }
-    renderCryptoCard(
-      "#boardBtcPrice",
-      "#boardBtcChange",
-      data.bitcoin?.usd,
-      data.bitcoin?.usd_24h_change,
-    );
-    renderCryptoCard(
-      "#boardEthPrice",
-      "#boardEthChange",
-      data.ethereum?.usd,
-      data.ethereum?.usd_24h_change,
-    );
-    if (typeof data.bitcoin?.usd === "number") {
-      updateTrendTail(marketWatchList, (item) => item.code === "BTC", data.bitcoin.usd);
-    }
-    if (typeof data.ethereum?.usd === "number") {
-      updateTrendTail(marketWatchList, (item) => item.code === "ETH", data.ethereum.usd);
-    }
-    renderMarketSnapshotBoard();
-    renderFortuneBtc(data.bitcoin?.usd);
+    const payload = await fetchCoinGeckoCryptoPayload();
+    applyCryptoPayload(payload);
     if (cryptoStatus) {
       cryptoStatus.textContent = "实时价格来自 CoinGecko，会在每分钟刷新一次。";
     }
   } catch (error) {
+    try {
+      const cachedPayload = loadCryptoCache();
+      const fallbackPayload = await fetchFallbackCryptoPayload(cachedPayload);
+      applyCryptoPayload(fallbackPayload);
+      if (cryptoStatus) {
+        cryptoStatus.textContent = "CoinGecko 暂时不可用，已切换到 Coinbase 现货价格。";
+      }
+      return;
+    } catch (fallbackError) {
+      const cachedPayload = loadCryptoCache();
+      if (cachedPayload && applyCryptoPayload(cachedPayload)) {
+        if (cryptoStatus) {
+          cryptoStatus.textContent = "实时接口暂时不稳定，先显示最近一次成功缓存的价格。";
+        }
+        console.error(error);
+        console.error(fallbackError);
+        return;
+      }
+    }
+
     const btcPrice = document.querySelector("#btcPrice");
     const ethPrice = document.querySelector("#ethPrice");
     const btcChange = document.querySelector("#btcChange");
@@ -1997,7 +2126,7 @@ async function loadCryptoPrices() {
       boardEthChange.className = "crypto-badge crypto-flat";
     }
     if (cryptoStatus) {
-      cryptoStatus.textContent = "暂时拿不到实时价格，稍后再试。";
+      cryptoStatus.textContent = "多个实时源都没拿到数据，稍后会自动重试。";
     }
     console.error(error);
   }
@@ -2160,10 +2289,15 @@ loadCryptoPrices();
 loadNewsHeadlines();
 loadPlacesWeather();
 window.setInterval(loadExchangeRate, 10 * 60_000);
+window.setInterval(loadCryptoPrices, CRYPTO_REFRESH_MS);
 window.setInterval(updateTodayInfo, 1000);
 window.setInterval(updateBirthdayReminder, 60 * 60_000);
 window.setInterval(updateDailyQuote, 60 * 60_000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    loadCryptoPrices();
+  }
+});
 window.setInterval(updatePlaceTime, 30_000);
-window.setInterval(loadCryptoPrices, 60_000);
 window.setInterval(loadNewsHeadlines, 10 * 60_000);
 window.setInterval(loadPlacesWeather, 10 * 60_000);

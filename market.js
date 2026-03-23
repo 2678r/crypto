@@ -1,5 +1,12 @@
 const CRYPTO_API_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
+const CRYPTO_FALLBACK_SPOT_URLS = {
+  bitcoin: "https://api.coinbase.com/v2/prices/BTC-USD/spot",
+  ethereum: "https://api.coinbase.com/v2/prices/ETH-USD/spot",
+};
+const CRYPTO_CACHE_KEY = "market-crypto-cache-v1";
+const CRYPTO_CACHE_MAX_AGE_MS = 12 * 60 * 60_000;
+const FETCH_TIMEOUT_MS = 8_000;
 
 const NEWS_FEEDS = [
   {
@@ -74,6 +81,79 @@ function formatPercent(value) {
   return `${prefix}${value.toFixed(2)}%`;
 }
 
+async function fetchJsonWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+function loadJsonCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveJsonCache(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore cache write issues and keep the page working.
+  }
+}
+
+function normalizeCryptoPayload(payload) {
+  const btcUsd = Number(payload?.bitcoin?.usd);
+  const ethUsd = Number(payload?.ethereum?.usd);
+  const btcChange = Number(payload?.bitcoin?.usd_24h_change);
+  const ethChange = Number(payload?.ethereum?.usd_24h_change);
+
+  if (!Number.isFinite(btcUsd) || !Number.isFinite(ethUsd)) {
+    return null;
+  }
+
+  return {
+    bitcoin: {
+      usd: btcUsd,
+      usd_24h_change: Number.isFinite(btcChange) ? btcChange : null,
+    },
+    ethereum: {
+      usd: ethUsd,
+      usd_24h_change: Number.isFinite(ethChange) ? ethChange : null,
+    },
+  };
+}
+
+function loadCryptoCache() {
+  const cached = loadJsonCache(CRYPTO_CACHE_KEY);
+  if (!cached || !cached.savedAt) return null;
+
+  const age = Date.now() - Number(cached.savedAt);
+  if (!Number.isFinite(age) || age < 0 || age > CRYPTO_CACHE_MAX_AGE_MS) {
+    return null;
+  }
+
+  return normalizeCryptoPayload(cached.payload);
+}
+
+function saveCryptoCache(payload) {
+  saveJsonCache(CRYPTO_CACHE_KEY, {
+    savedAt: Date.now(),
+    payload,
+  });
+}
+
 function renderCryptoCard(priceId, changeId, price, change) {
   const priceNode = document.querySelector(priceId);
   const changeNode = document.querySelector(changeId);
@@ -92,22 +172,73 @@ function renderCryptoCard(priceId, changeId, price, change) {
   }
 }
 
+function applyCryptoPayload(payload) {
+  const normalized = normalizeCryptoPayload(payload);
+  if (!normalized) return false;
+
+  renderCryptoCard("#btcPrice", "#btcChange", normalized.bitcoin.usd, normalized.bitcoin.usd_24h_change);
+  renderCryptoCard("#ethPrice", "#ethChange", normalized.ethereum.usd, normalized.ethereum.usd_24h_change);
+  saveCryptoCache(normalized);
+  return true;
+}
+
+async function fetchCoinGeckoCryptoPayload() {
+  const response = await fetchJsonWithTimeout(CRYPTO_API_URL);
+  if (!response.ok) throw new Error("crypto-fetch-failed");
+  return normalizeCryptoPayload(await response.json());
+}
+
+async function fetchFallbackCryptoPayload(previousPayload = null) {
+  const [btcResponse, ethResponse] = await Promise.all([
+    fetchJsonWithTimeout(CRYPTO_FALLBACK_SPOT_URLS.bitcoin),
+    fetchJsonWithTimeout(CRYPTO_FALLBACK_SPOT_URLS.ethereum),
+  ]);
+
+  if (!btcResponse.ok || !ethResponse.ok) throw new Error("crypto-fallback-failed");
+
+  const btcJson = await btcResponse.json();
+  const ethJson = await ethResponse.json();
+  const btcUsd = Number(btcJson?.data?.amount);
+  const ethUsd = Number(ethJson?.data?.amount);
+
+  if (!Number.isFinite(btcUsd) || !Number.isFinite(ethUsd)) {
+    throw new Error("crypto-fallback-invalid");
+  }
+
+  return {
+    bitcoin: {
+      usd: btcUsd,
+      usd_24h_change: Number(previousPayload?.bitcoin?.usd_24h_change),
+    },
+    ethereum: {
+      usd: ethUsd,
+      usd_24h_change: Number(previousPayload?.ethereum?.usd_24h_change),
+    },
+  };
+}
+
 async function loadCryptoPrices() {
   cryptoStatus.textContent = "正在获取实时价格...";
 
   try {
-    const response = await fetch(CRYPTO_API_URL);
-    if (!response.ok) throw new Error("crypto-fetch-failed");
-
-    const data = await response.json();
-    const btc = data.bitcoin || {};
-    const eth = data.ethereum || {};
-
-    renderCryptoCard("#btcPrice", "#btcChange", btc.usd, btc.usd_24h_change);
-    renderCryptoCard("#ethPrice", "#ethChange", eth.usd, eth.usd_24h_change);
+    const payload = await fetchCoinGeckoCryptoPayload();
+    applyCryptoPayload(payload);
     cryptoStatus.textContent = "CoinGecko 实时美元价格。";
   } catch {
-    cryptoStatus.textContent = "实时价格暂时不可用。";
+    try {
+      const fallbackPayload = await fetchFallbackCryptoPayload(loadCryptoCache());
+      applyCryptoPayload(fallbackPayload);
+      cryptoStatus.textContent = "CoinGecko 暂时不可用，已切换到 Coinbase 现货价格。";
+      return;
+    } catch {
+      const cachedPayload = loadCryptoCache();
+      if (cachedPayload && applyCryptoPayload(cachedPayload)) {
+        cryptoStatus.textContent = "实时接口暂时不稳定，先显示最近一次成功缓存的价格。";
+        return;
+      }
+    }
+
+    cryptoStatus.textContent = "多个实时源都没拿到数据，稍后会自动重试。";
     renderCryptoCard("#btcPrice", "#btcChange", NaN, NaN);
     renderCryptoCard("#ethPrice", "#ethChange", NaN, NaN);
   }
@@ -179,7 +310,7 @@ function formatFoodDelta(latest, previous) {
 }
 
 function renderFoodBoard() {
-  foodStatus.textContent = "来源：世界银行 Pink Sheet，统一按美元基准价显示。";
+  foodStatus.textContent = "来源：世界银行 Pink Sheet，显示的是国际月均基准价，不是各地实时零售价。";
   foodGrid.innerHTML = foodBenchmarks
     .map((item) => {
       const delta = formatFoodDelta(item.latest, item.previous);
@@ -193,7 +324,7 @@ function renderFoodBoard() {
             <span class="${delta.className}">${delta.label}</span>
           </div>
           <h3>${escapeHtml(formatFoodValue(item.latest, item.unit))}</h3>
-          <p class="food-period">${escapeHtml(item.period)} 月均价</p>
+          <p class="food-period">${escapeHtml(item.period)} 国际月均价</p>
         </article>
       `;
     })
@@ -226,3 +357,8 @@ loadNewsHeadlines();
 window.setInterval(updateClocks, 1000);
 window.setInterval(loadCryptoPrices, 60_000);
 window.setInterval(loadNewsHeadlines, 10 * 60_000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    loadCryptoPrices();
+  }
+});
