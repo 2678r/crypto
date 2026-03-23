@@ -2,6 +2,7 @@ const STORAGE_KEY = "turnip-tracker-week";
 const MESSAGE_BOARD_KEY = "family-message-board-v1";
 const MESSAGE_HIDDEN_KEY = "family-message-hidden-v1";
 const MESSAGE_PAYLOAD_PREFIX = "__FMB1__";
+const MESSAGE_DEFAULT_VISIBLE_COUNT = 5;
 const DEFAULT_USD_TO_CNY_RATE = 6.87365;
 const FX_API_URL = "https://api.frankfurter.app/latest?from=USD&to=CNY";
 const SUPABASE_URL = "https://cxwwvqafpmnwebrldjcd.supabase.co";
@@ -999,8 +1000,9 @@ function renderMessageBoard(entries = loadMessageEntries()) {
   }
 
   const threadedEntries = buildThreadedMessages(entries);
+  const visibleThreadedEntries = threadedEntries.slice(0, MESSAGE_DEFAULT_VISIBLE_COUNT);
 
-  messageList.innerHTML = threadedEntries
+  messageList.innerHTML = visibleThreadedEntries
     .map((entry) => `
       <article class="message-card">
         <div class="message-card-top">
