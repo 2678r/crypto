@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大头菜计算器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Nunito:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="sky sky-left"></div>
+    <div class="sky sky-right"></div>
+
+    <nav class="site-nav" aria-label="站点导航">
+      <div class="site-nav-inner">
+        <a class="site-brand" href="./index.html">自家小站</a>
+        <div class="site-nav-links">
+          <a class="site-nav-link" href="./index.html">家庭主页</a>
+          <a class="site-nav-link is-active" href="./turnip.html">大头菜计算器</a>
+          <a class="site-nav-link" href="./market.html">全球市场版</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="app-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Turnip Calculator</p>
+          <h1 id="mainHeadline">大头菜计算器<br />本周卖价观察</h1>
+          <p class="lead">
+            把买入价和每天 AM / PM 的价格记下来，页面会自动给出走势判断和卖出建议。
+          </p>
+        </div>
+
+        <div class="fortune-wrapper">
+          <div class="fortune-photo-frame">
+            <img class="fortune-image" src="./assets/caishen.png" alt="财神举着大头菜和元宝" />
+          </div>
+        </div>
+      </section>
+
+      <details id="turnipExtra" class="home-extra turnip-extra" aria-label="大头菜价格预测" open>
+        <summary class="home-extra-summary">
+          <span>大头菜价格预测</span>
+          <span class="home-extra-tip">点击收起</span>
+        </summary>
+
+        <section class="metrics-grid" aria-label="本周概览">
+          <article class="metric-card">
+            <p class="metric-label">当前判断</p>
+            <h2 id="patternName">等待录入</h2>
+            <p id="patternDetail" class="metric-detail">
+              先输入买入价和几个时段价格，系统会开始缩小范围。
+            </p>
+          </article>
+
+          <article class="metric-card">
+            <p class="metric-label">买入价</p>
+            <h2 id="buyPriceCard">-- 铃钱</h2>
+            <p class="metric-detail">周日 Daisy Mae 的进价。</p>
+          </article>
+
+          <article class="metric-card">
+            <p class="metric-label">本周最高</p>
+            <h2 id="weekHighCard">-- 铃钱</h2>
+            <p class="metric-detail">已录入时段中的最高价。</p>
+          </article>
+
+          <article class="metric-card">
+            <p class="metric-label">卖出建议</p>
+            <h2 id="actionCard">继续观察</h2>
+            <p id="actionDetail" class="metric-detail">
+              数据越完整，建议会越明确。
+            </p>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel tracker-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Price Log</p>
+                <h2>本周价格录入</h2>
+              </div>
+              <p class="panel-note">留空代表还没去问价，输入后会自动重新分析。</p>
+            </div>
+
+            <div class="buy-row">
+              <label class="field-card buy-field">
+                <span>周日买入价</span>
+                <input id="buyPriceInput" type="number" min="0" max="999" placeholder="例如 96" />
+              </label>
+              <div class="mini-tip">
+                正常买入价通常在 90 到 110 左右，后续预测都会以这里为基准。
+              </div>
+            </div>
+
+            <div class="quick-entry-card">
+              <div class="quick-entry-head">
+                <div>
+                  <p class="eyebrow">Quick Input</p>
+                  <h3>快速录入</h3>
+                </div>
+                <p class="quick-entry-note">支持按顺序一次输入，页面会自动保留记录。</p>
+              </div>
+
+              <label class="field-card quick-entry-field" for="quickEntryInput">
+                <span>批量输入价格</span>
+                <textarea
+                  id="quickEntryInput"
+                  rows="3"
+                  placeholder="例如：88 83 79 74 128 176"
+                ></textarea>
+                <small>顺序按 周一AM、周一PM、周二AM... 到 周六PM，空着的不填就行。</small>
+              </label>
+
+              <div class="quick-entry-actions">
+                <button id="quickEntryApply" type="button">一键填入</button>
+                <p id="turnipSaveHint" class="quick-save-hint">已自动保存到本机浏览器，下次打开会保留。</p>
+              </div>
+            </div>
+
+            <div id="priceGrid" class="price-grid"></div>
+          </article>
+
+          <article class="panel outlook-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Forecast</p>
+                <h2>走势观察</h2>
+              </div>
+              <p class="panel-note">这不是严格公式解，而是适合日常使用的轻量预测。</p>
+            </div>
+
+            <div class="spotlight-stack">
+              <div class="forecast-box">
+                <p class="forecast-label">最可能走势</p>
+                <h3 id="bestPattern">等待数据</h3>
+                <p id="bestPatternCopy" class="forecast-copy">
+                  输入几段价格后，这里会告诉你更接近哪一类。
+                </p>
+              </div>
+
+              <div class="forecast-box">
+                <p class="forecast-label">预估最高区间</p>
+                <h3 id="peakRange">--</h3>
+                <p id="peakWindow" class="forecast-copy">还无法判断峰值时段。</p>
+              </div>
+
+              <div class="forecast-box">
+                <p class="forecast-label">下一步建议</p>
+                <h3 id="nextAdvice">先补充价格</h3>
+                <p id="nextAdviceCopy" class="forecast-copy">
+                  至少录入买入价和 2 到 3 个时段，判断会更稳。
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel board">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Timeline</p>
+              <h2>价格时段总览</h2>
+            </div>
+            <p class="panel-note">按周一 AM 到周六 PM 排列，方便你快速看走势节奏。</p>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>时段</th>
+                  <th>价格</th>
+                  <th>相对买入价</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr>
+                  <td colspan="4" class="loading-row">等待录入本周价格。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </details>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

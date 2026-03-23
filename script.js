@@ -514,6 +514,8 @@ function toNumber(value) {
 }
 
 function createInputs() {
+  if (!priceGrid) return;
+
   priceGrid.innerHTML = slots
     .map(
       (slot) => `
@@ -535,6 +537,7 @@ function createInputs() {
 
   slots.forEach((slot) => {
     const input = document.querySelector(`#${slot.id}`);
+    if (!input) return;
     input.addEventListener("input", (event) => {
       state.prices[slot.id] = event.target.value;
       persistAndRender("已更新本周价格记录。");
@@ -692,6 +695,8 @@ function getStatusPill(price, buyPrice) {
 }
 
 function renderTable(buyPrice) {
+  if (!tableBody) return;
+
   tableBody.innerHTML = slots
     .map((slot) => {
       const value = toNumber(state.prices[slot.id]);
@@ -713,6 +718,8 @@ function renderTable(buyPrice) {
 }
 
 function render() {
+  if (!buyPriceInput) return;
+
   const buyPrice = toNumber(state.buyPrice);
   const entries = getRecordedEntries();
   const summary = summarizePattern(buyPrice, entries);
@@ -726,19 +733,32 @@ function render() {
     turnipSaveHint.textContent = formatSavedTime(state.lastUpdated);
   }
 
-  document.querySelector("#patternName").textContent = summary.pattern;
-  document.querySelector("#patternDetail").textContent = summary.detail;
-  document.querySelector("#buyPriceCard").textContent = formatBell(buyPrice);
-  document.querySelector("#weekHighCard").textContent = formatBell(highest);
-  document.querySelector("#actionCard").textContent = summary.action;
-  document.querySelector("#actionDetail").textContent = summary.actionDetail;
+  const patternName = document.querySelector("#patternName");
+  const patternDetail = document.querySelector("#patternDetail");
+  const buyPriceCard = document.querySelector("#buyPriceCard");
+  const weekHighCard = document.querySelector("#weekHighCard");
+  const actionCard = document.querySelector("#actionCard");
+  const actionDetail = document.querySelector("#actionDetail");
+  const bestPattern = document.querySelector("#bestPattern");
+  const bestPatternCopy = document.querySelector("#bestPatternCopy");
+  const peakRange = document.querySelector("#peakRange");
+  const peakWindow = document.querySelector("#peakWindow");
+  const nextAdvice = document.querySelector("#nextAdvice");
+  const nextAdviceCopy = document.querySelector("#nextAdviceCopy");
 
-  document.querySelector("#bestPattern").textContent = summary.pattern;
-  document.querySelector("#bestPatternCopy").textContent = summary.detail;
-  document.querySelector("#peakRange").textContent = summary.peakRange;
-  document.querySelector("#peakWindow").textContent = summary.peakWindow;
-  document.querySelector("#nextAdvice").textContent = summary.advice;
-  document.querySelector("#nextAdviceCopy").textContent = summary.adviceCopy;
+  if (patternName) patternName.textContent = summary.pattern;
+  if (patternDetail) patternDetail.textContent = summary.detail;
+  if (buyPriceCard) buyPriceCard.textContent = formatBell(buyPrice);
+  if (weekHighCard) weekHighCard.textContent = formatBell(highest);
+  if (actionCard) actionCard.textContent = summary.action;
+  if (actionDetail) actionDetail.textContent = summary.actionDetail;
+
+  if (bestPattern) bestPattern.textContent = summary.pattern;
+  if (bestPatternCopy) bestPatternCopy.textContent = summary.detail;
+  if (peakRange) peakRange.textContent = summary.peakRange;
+  if (peakWindow) peakWindow.textContent = summary.peakWindow;
+  if (nextAdvice) nextAdvice.textContent = summary.advice;
+  if (nextAdviceCopy) nextAdviceCopy.textContent = summary.adviceCopy;
 
   renderTable(buyPrice);
 }
@@ -2228,10 +2248,12 @@ function persistAndRender(message) {
   }
 }
 
-buyPriceInput.addEventListener("input", (event) => {
-  state.buyPrice = event.target.value;
-  persistAndRender("已更新周日买入价。");
-});
+if (buyPriceInput) {
+  buyPriceInput.addEventListener("input", (event) => {
+    state.buyPrice = event.target.value;
+    persistAndRender("已更新周日买入价。");
+  });
+}
 
 if (sampleButton) {
   sampleButton.addEventListener("click", () => {
@@ -2267,8 +2289,10 @@ if (messageForm) {
   messageForm.addEventListener("submit", handleMessageSubmit);
 }
 
-createInputs();
-render();
+if (priceGrid && buyPriceInput) {
+  createInputs();
+  render();
+}
 renderBlessingWall();
 renderFoodBoard();
 renderMarketSnapshotBoard();
